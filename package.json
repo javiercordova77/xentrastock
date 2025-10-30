@@ -1,0 +1,15 @@
+{
+  "name": "xentrastock",
+  "version": "1.0.0",
+  "description": "Sistema de Inventarios Xentra Stocks",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview",
+    "install-client": "cd client && npm install"
+  },
+  "keywords": ["inventory", "management", "stock", "xentra"],
+  "author": "",
+  "license": "ISC"
+}
