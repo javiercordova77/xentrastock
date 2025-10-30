@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Inventario</h1>
+    <a href="{{ url_for('inventario_create') }}" class="btn btn-success">+ Nuevo Registro</a>
+</div>
+
+<div class="filters-section">
+    <h3>Filtros</h3>
+    <form method="GET" action="{{ url_for('inventario_list') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="producto_id">Producto</label>
+                <select id="producto_id" name="producto_id" class="form-control">
+                    <option value="">Todos</option>
+                    {% for producto in productos %}
+                    <option value="{{ producto.id }}" {{ 'selected' if selected_producto == producto.id else '' }}>
+                        {{ producto.codigo }} - {{ producto.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="ubicacion_id">Ubicación</label>
+                <select id="ubicacion_id" name="ubicacion_id" class="form-control">
+                    <option value="">Todas</option>
+                    {% for ubicacion in ubicaciones %}
+                    <option value="{{ ubicacion.id }}" {{ 'selected' if selected_ubicacion == ubicacion.id else '' }}>
+                        {{ ubicacion.codigo }} - {{ ubicacion.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="estado">Estado de Stock</label>
+                <select id="estado" name="estado" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="SIN_STOCK" {{ 'selected' if selected_estado == 'SIN_STOCK' else '' }}>Sin Stock</option>
+                    <option value="STOCK_BAJO" {{ 'selected' if selected_estado == 'STOCK_BAJO' else '' }}>Stock Bajo</option>
+                    <option value="STOCK_NORMAL" {{ 'selected' if selected_estado == 'STOCK_NORMAL' else '' }}>Stock Normal</option>
+                    <option value="STOCK_ALTO" {{ 'selected' if selected_estado == 'STOCK_ALTO' else '' }}>Stock Alto</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('inventario_list') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Variante</th>
+                <th>Ubicación</th>
+                <th>Cantidad</th>
+                <th>Lote</th>
+                <th>F. Vencimiento</th>
+                <th>Estado Stock</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inventario in inventarios %}
+            <tr>
+                <td>{{ inventario.id }}</td>
+                <td>{{ inventario.producto.nombre if inventario.producto else '-' }}</td>
+                <td>{{ inventario.variante.nombre if inventario.variante else '-' }}</td>
+                <td>{{ inventario.ubicacion.nombre if inventario.ubicacion else '-' }}</td>
+                <td><strong>{{ inventario.cantidad }}</strong></td>
+                <td>{{ inventario.lote or '-' }}</td>
+                <td>{{ inventario.fecha_vencimiento.strftime('%Y-%m-%d') if inventario.fecha_vencimiento else '-' }}</td>
+                <td>
+                    {% set estado = inventario.get_estado_stock() %}
+                    <span class="badge badge-{% if estado == 'SIN_STOCK' %}danger{% elif estado == 'STOCK_BAJO' %}warning{% elif estado == 'STOCK_ALTO' %}info{% else %}success{% endif %}">
+                        {{ estado.replace('_', ' ') }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('inventario_edit', id=inventario.id) }}" class="btn btn-sm btn-primary">Editar</a>
+                    <form method="POST" action="{{ url_for('inventario_delete', id=inventario.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este registro?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center">No hay registros de inventario</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

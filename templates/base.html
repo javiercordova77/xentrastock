@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Xentrastock{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">Xentrastock</a>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('proveedores_list') }}">Proveedores</a></li>
+                <li><a href="{{ url_for('categorias_list') }}">Categorías</a></li>
+                <li><a href="{{ url_for('ubicaciones_list') }}">Ubicaciones</a></li>
+                <li><a href="{{ url_for('productos_list') }}">Productos</a></li>
+                <li><a href="{{ url_for('variantes_list') }}">Variantes</a></li>
+                <li><a href="{{ url_for('inventario_list') }}">Inventario</a></li>
+                <li><a href="{{ url_for('movimientos_list') }}">Movimientos</a></li>
+                <li><a href="{{ url_for('transferencias_list') }}">Transferencias</a></li>
+                <li><a href="{{ url_for('reportes_index') }}">Reportes</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Xentrastock - Sistema de Gestión de Inventarios</p>
+    </footer>
+</body>
+</html>

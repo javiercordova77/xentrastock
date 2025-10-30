@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Transferencias - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Transferencias entre Ubicaciones</h1>
+    <a href="{{ url_for('transferencias_create') }}" class="btn btn-success">+ Nueva Transferencia</a>
+</div>
+
+<div class="filters-section">
+    <h3>Filtros</h3>
+    <form method="GET" action="{{ url_for('transferencias_list') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="PENDIENTE" {{ 'selected' if selected_estado == 'PENDIENTE' else '' }}>Pendiente</option>
+                    <option value="EN_PROCESO" {{ 'selected' if selected_estado == 'EN_PROCESO' else '' }}>En Proceso</option>
+                    <option value="COMPLETADA" {{ 'selected' if selected_estado == 'COMPLETADA' else '' }}>Completada</option>
+                    <option value="CANCELADA" {{ 'selected' if selected_estado == 'CANCELADA' else '' }}>Cancelada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('transferencias_list') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Variante</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Cantidad</th>
+                <th>Estado</th>
+                <th>F. Solicitud</th>
+                <th>Usuario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transferencia in transferencias %}
+            <tr>
+                <td>{{ transferencia.id }}</td>
+                <td>{{ transferencia.producto.nombre if transferencia.producto else '-' }}</td>
+                <td>{{ transferencia.variante.nombre if transferencia.variante else '-' }}</td>
+                <td>{{ transferencia.ubicacion_origen.nombre if transferencia.ubicacion_origen else '-' }}</td>
+                <td>{{ transferencia.ubicacion_destino.nombre if transferencia.ubicacion_destino else '-' }}</td>
+                <td><strong>{{ transferencia.cantidad }}</strong></td>
+                <td>
+                    <span class="badge badge-{% if transferencia.estado == 'COMPLETADA' %}success{% elif transferencia.estado == 'CANCELADA' %}secondary{% elif transferencia.estado == 'EN_PROCESO' %}info{% else %}warning{% endif %}">
+                        {{ transferencia.estado }}
+                    </span>
+                </td>
+                <td>{{ transferencia.fecha_solicitud.strftime('%Y-%m-%d') if transferencia.fecha_solicitud else '-' }}</td>
+                <td>{{ transferencia.usuario_solicita or '-' }}</td>
+                <td>
+                    {% if transferencia.estado == 'PENDIENTE' %}
+                    <form method="POST" action="{{ url_for('transferencias_procesar', id=transferencia.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Procesar esta transferencia?');">Procesar</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('transferencias_cancelar', id=transferencia.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Cancelar esta transferencia?');">Cancelar</button>
+                    </form>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="text-center">No hay transferencias registradas</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

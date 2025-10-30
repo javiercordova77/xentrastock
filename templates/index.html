@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Xentrastock</h1>
+    <p class="subtitle">Sistema de Gestión de Inventarios</p>
+</div>
+
+<div class="dashboard">
+    <h2>Módulos del Sistema</h2>
+    
+    <div class="module-grid">
+        <div class="module-card">
+            <h3>Proveedores</h3>
+            <p>Gestión completa de proveedores con operaciones CRUD</p>
+            <a href="{{ url_for('proveedores_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Categorías</h3>
+            <p>Administración de categorías de productos</p>
+            <a href="{{ url_for('categorias_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Ubicaciones</h3>
+            <p>Control de ubicaciones de almacenamiento</p>
+            <a href="{{ url_for('ubicaciones_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Productos</h3>
+            <p>Catálogo completo de productos</p>
+            <a href="{{ url_for('productos_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Variantes</h3>
+            <p>Gestión de variantes de productos</p>
+            <a href="{{ url_for('variantes_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Inventario</h3>
+            <p>Visualización, filtros y estados de stock</p>
+            <a href="{{ url_for('inventario_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Movimientos</h3>
+            <p>Ingresos, salidas e historial de movimientos</p>
+            <a href="{{ url_for('movimientos_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Transferencias</h3>
+            <p>Crear, listar y procesar transferencias</p>
+            <a href="{{ url_for('transferencias_list') }}" class="btn btn-primary">Acceder</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Reportes</h3>
+            <p>Generar, imprimir y filtrar reportes</p>
+            <a href="{{ url_for('reportes_index') }}" class="btn btn-primary">Acceder</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Inventario - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reporte de Inventario</h1>
+    <a href="{{ url_for('reportes_generar_pdf', tipo='inventario') }}" class="btn btn-secondary">Descargar PDF</a>
+</div>
+
+<div class="filters-section">
+    <h3>Filtros</h3>
+    <form method="GET" action="{{ url_for('reportes_inventario') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="estado">Estado de Stock</label>
+                <select id="estado" name="estado" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="SIN_STOCK" {{ 'selected' if selected_estado == 'SIN_STOCK' else '' }}>Sin Stock</option>
+                    <option value="STOCK_BAJO" {{ 'selected' if selected_estado == 'STOCK_BAJO' else '' }}>Stock Bajo</option>
+                    <option value="STOCK_NORMAL" {{ 'selected' if selected_estado == 'STOCK_NORMAL' else '' }}>Stock Normal</option>
+                    <option value="STOCK_ALTO" {{ 'selected' if selected_estado == 'STOCK_ALTO' else '' }}>Stock Alto</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="categoria_id">Categoría</label>
+                <select id="categoria_id" name="categoria_id" class="form-control">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" {{ 'selected' if selected_categoria == categoria.id else '' }}>
+                        {{ categoria.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('reportes_inventario') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Código</th>
+                <th>Categoría</th>
+                <th>Ubicación</th>
+                <th>Cantidad</th>
+                <th>Estado Stock</th>
+                <th>Stock Min/Max</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inventario in inventarios %}
+            <tr>
+                <td>{{ inventario.producto.nombre if inventario.producto else '-' }}</td>
+                <td>{{ inventario.producto.codigo if inventario.producto else '-' }}</td>
+                <td>{{ inventario.producto.categoria.nombre if inventario.producto and inventario.producto.categoria else '-' }}</td>
+                <td>{{ inventario.ubicacion.nombre if inventario.ubicacion else '-' }}</td>
+                <td><strong>{{ inventario.cantidad }}</strong></td>
+                <td>
+                    {% set estado = inventario.get_estado_stock() %}
+                    <span class="badge badge-{% if estado == 'SIN_STOCK' %}danger{% elif estado == 'STOCK_BAJO' %}warning{% elif estado == 'STOCK_ALTO' %}info{% else %}success{% endif %}">
+                        {{ estado.replace('_', ' ') }}
+                    </span>
+                </td>
+                <td>
+                    {% if inventario.producto %}
+                        {{ inventario.producto.stock_minimo }} / {{ inventario.producto.stock_maximo }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No hay datos para mostrar</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
