@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if ubicacion else 'Nueva' }} Ubicación - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ 'Editar' if ubicacion else 'Nueva' }} Ubicación</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="codigo">Código *</label>
+                <input type="text" id="codigo" name="codigo" class="form-control" value="{{ ubicacion.codigo if ubicacion else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input type="text" id="nombre" name="nombre" class="form-control" value="{{ ubicacion.nombre if ubicacion else '' }}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" name="descripcion" class="form-control" rows="3">{{ ubicacion.descripcion if ubicacion else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="capacidad">Capacidad (unidades)</label>
+            <input type="number" id="capacidad" name="capacidad" class="form-control" value="{{ ubicacion.capacidad if ubicacion else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="activo" {{ 'checked' if not ubicacion or ubicacion.activo else '' }}>
+                Activo
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{{ url_for('ubicaciones_list') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Editar' if variante else 'Nueva' }} Variante - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ 'Editar' if variante else 'Nueva' }} Variante</h1>
+</div>
+
+<div class="form-container">
+    <form method="POST">
+        <div class="form-group">
+            <label for="producto_id">Producto *</label>
+            <select id="producto_id" name="producto_id" class="form-control" required>
+                <option value="">Seleccione un producto...</option>
+                {% for producto in productos %}
+                <option value="{{ producto.id }}" {{ 'selected' if variante and variante.producto_id == producto.id else '' }}>
+                    {{ producto.codigo }} - {{ producto.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="codigo">Código *</label>
+                <input type="text" id="codigo" name="codigo" class="form-control" value="{{ variante.codigo if variante else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input type="text" id="nombre" name="nombre" class="form-control" value="{{ variante.nombre if variante else '' }}" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="atributo_1">Atributo 1 (ej: Color)</label>
+                <input type="text" id="atributo_1" name="atributo_1" class="form-control" value="{{ variante.atributo_1 if variante else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="valor_1">Valor 1 (ej: Rojo)</label>
+                <input type="text" id="valor_1" name="valor_1" class="form-control" value="{{ variante.valor_1 if variante else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="atributo_2">Atributo 2 (ej: Talla)</label>
+                <input type="text" id="atributo_2" name="atributo_2" class="form-control" value="{{ variante.atributo_2 if variante else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="valor_2">Valor 2 (ej: M)</label>
+                <input type="text" id="valor_2" name="valor_2" class="form-control" value="{{ variante.valor_2 if variante else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="precio_adicional">Precio Adicional</label>
+            <input type="number" step="0.01" id="precio_adicional" name="precio_adicional" class="form-control" value="{{ variante.precio_adicional if variante else '0.00' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="activo" {{ 'checked' if not variante or variante.activo else '' }}>
+                Activo
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{{ url_for('variantes_list') }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

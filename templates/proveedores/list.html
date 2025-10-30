@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Proveedores - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Proveedores</h1>
+    <a href="{{ url_for('proveedores_create') }}" class="btn btn-success">+ Nuevo Proveedor</a>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>RFC</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Contacto</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proveedor in proveedores %}
+            <tr>
+                <td>{{ proveedor.id }}</td>
+                <td>{{ proveedor.nombre }}</td>
+                <td>{{ proveedor.rfc or '-' }}</td>
+                <td>{{ proveedor.telefono or '-' }}</td>
+                <td>{{ proveedor.email or '-' }}</td>
+                <td>{{ proveedor.contacto or '-' }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if proveedor.activo else 'secondary' }}">
+                        {{ 'Activo' if proveedor.activo else 'Inactivo' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('proveedores_edit', id=proveedor.id) }}" class="btn btn-sm btn-primary">Editar</a>
+                    <form method="POST" action="{{ url_for('proveedores_delete', id=proveedor.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este proveedor?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center">No hay proveedores registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

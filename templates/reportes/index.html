@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reportes del Sistema</h1>
+</div>
+
+<div class="reports-grid">
+    <div class="report-card">
+        <h3>Reporte de Inventario</h3>
+        <p>Visualice el estado actual del inventario con filtros por estado y categoría</p>
+        <a href="{{ url_for('reportes_inventario') }}" class="btn btn-primary">Ver Reporte</a>
+        <a href="{{ url_for('reportes_generar_pdf', tipo='inventario') }}" class="btn btn-secondary">Descargar PDF</a>
+    </div>
+
+    <div class="report-card">
+        <h3>Reporte de Movimientos</h3>
+        <p>Consulte el historial de movimientos con filtros por tipo y fecha</p>
+        <a href="{{ url_for('reportes_movimientos') }}" class="btn btn-primary">Ver Reporte</a>
+        <a href="{{ url_for('reportes_generar_pdf', tipo='movimientos') }}" class="btn btn-secondary">Descargar PDF</a>
+    </div>
+
+    <div class="report-card">
+        <h3>Estadísticas Generales</h3>
+        <div class="stats">
+            <p><strong>Total Productos:</strong> {{ stats.total_productos if stats else 0 }}</p>
+            <p><strong>Total Categorías:</strong> {{ stats.total_categorias if stats else 0 }}</p>
+            <p><strong>Total Proveedores:</strong> {{ stats.total_proveedores if stats else 0 }}</p>
+            <p><strong>Total Ubicaciones:</strong> {{ stats.total_ubicaciones if stats else 0 }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="info-section">
+    <h3>Instrucciones</h3>
+    <ul>
+        <li>Utilice los reportes para visualizar información detallada del sistema</li>
+        <li>Puede filtrar los reportes por diferentes criterios</li>
+        <li>Los reportes PDF son útiles para impresión y archivo</li>
+        <li>Los datos se actualizan en tiempo real</li>
+    </ul>
+</div>
+{% endblock %}

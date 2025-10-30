@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Variantes - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Variantes de Productos</h1>
+    <a href="{{ url_for('variantes_create') }}" class="btn btn-success">+ Nueva Variante</a>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Nombre</th>
+                <th>Atributo 1</th>
+                <th>Atributo 2</th>
+                <th>Precio Adicional</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for variante in variantes %}
+            <tr>
+                <td><strong>{{ variante.codigo }}</strong></td>
+                <td>{{ variante.producto.nombre if variante.producto else '-' }}</td>
+                <td>{{ variante.nombre }}</td>
+                <td>{{ variante.atributo_1 }}: {{ variante.valor_1 }}</td>
+                <td>{% if variante.atributo_2 %}{{ variante.atributo_2 }}: {{ variante.valor_2 }}{% else %}-{% endif %}</td>
+                <td>${{ "%.2f"|format(variante.precio_adicional) }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if variante.activo else 'secondary' }}">
+                        {{ 'Activo' if variante.activo else 'Inactivo' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('variantes_edit', id=variante.id) }}" class="btn btn-sm btn-primary">Editar</a>
+                    <form method="POST" action="{{ url_for('variantes_delete', id=variante.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar esta variante?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center">No hay variantes registradas</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

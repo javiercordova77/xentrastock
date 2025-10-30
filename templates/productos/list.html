@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Productos - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Productos</h1>
+    <a href="{{ url_for('productos_create') }}" class="btn btn-success">+ Nuevo Producto</a>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Proveedor</th>
+                <th>Precio Compra</th>
+                <th>Precio Venta</th>
+                <th>Stock Min/Max</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td><strong>{{ producto.codigo }}</strong></td>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.categoria.nombre if producto.categoria else '-' }}</td>
+                <td>{{ producto.proveedor.nombre if producto.proveedor else '-' }}</td>
+                <td>${{ "%.2f"|format(producto.precio_compra) }}</td>
+                <td>${{ "%.2f"|format(producto.precio_venta) }}</td>
+                <td>{{ producto.stock_minimo }} / {{ producto.stock_maximo }}</td>
+                <td>
+                    <span class="badge badge-{{ 'success' if producto.activo else 'secondary' }}">
+                        {{ 'Activo' if producto.activo else 'Inactivo' }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('productos_edit', id=producto.id) }}" class="btn btn-sm btn-primary">Editar</a>
+                    <form method="POST" action="{{ url_for('productos_delete', id=producto.id) }}" style="display:inline;" onsubmit="return confirm('¿Está seguro de eliminar este producto?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center">No hay productos registrados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

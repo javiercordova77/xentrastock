@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Movimientos - Xentrastock{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reporte de Movimientos</h1>
+    <a href="{{ url_for('reportes_generar_pdf', tipo='movimientos') }}" class="btn btn-secondary">Descargar PDF</a>
+</div>
+
+<div class="filters-section">
+    <h3>Filtros</h3>
+    <form method="GET" action="{{ url_for('reportes_movimientos') }}">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="ENTRADA" {{ 'selected' if selected_tipo == 'ENTRADA' else '' }}>Entrada</option>
+                    <option value="SALIDA" {{ 'selected' if selected_tipo == 'SALIDA' else '' }}>Salida</option>
+                    <option value="AJUSTE" {{ 'selected' if selected_tipo == 'AJUSTE' else '' }}>Ajuste</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_desde">Fecha Desde</label>
+                <input type="date" id="fecha_desde" name="fecha_desde" class="form-control" value="{{ fecha_desde or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_hasta">Fecha Hasta</label>
+                <input type="date" id="fecha_hasta" name="fecha_hasta" class="form-control" value="{{ fecha_hasta or '' }}">
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="{{ url_for('reportes_movimientos') }}" class="btn btn-secondary">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Producto</th>
+                <th>Código</th>
+                <th>Cantidad</th>
+                <th>Motivo</th>
+                <th>Referencia</th>
+                <th>Usuario</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for movimiento in movimientos %}
+            <tr>
+                <td>{{ movimiento.id }}</td>
+                <td>{{ movimiento.fecha.strftime('%Y-%m-%d %H:%M') if movimiento.fecha else '-' }}</td>
+                <td>
+                    <span class="badge badge-{% if movimiento.tipo == 'ENTRADA' %}success{% elif movimiento.tipo == 'SALIDA' %}danger{% else %}info{% endif %}">
+                        {{ movimiento.tipo }}
+                    </span>
+                </td>
+                <td>{{ movimiento.producto.nombre if movimiento.producto else '-' }}</td>
+                <td>{{ movimiento.producto.codigo if movimiento.producto else '-' }}</td>
+                <td><strong>{{ movimiento.cantidad }}</strong></td>
+                <td>{{ movimiento.motivo or '-' }}</td>
+                <td>{{ movimiento.referencia or '-' }}</td>
+                <td>{{ movimiento.usuario or '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center">No hay datos para mostrar</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="summary-section">
+    <h3>Resumen</h3>
+    <p>Total de movimientos mostrados: <strong>{{ movimientos|length }}</strong></p>
+</div>
+{% endblock %}
