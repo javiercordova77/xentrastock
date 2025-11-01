@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XentraStock 3.0 - Sistema de Inventario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <script src="/_sdk/data_sdk.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gray-50">
+    <div class="flex h-screen bg-gray-50">
+        <!-- Sidebar -->
+        <div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300" id="sidebar">
+            <div class="flex items-center justify-center h-16 bg-indigo-600">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-boxes text-white text-2xl"></i>
+                    <span class="text-white text-xl font-bold">XentraStock 3.0</span>
+                </div>
+            </div>
+            
+            <nav class="mt-5 px-2">
+                <button id="tab-dashboard" class="tab-button tab-active group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-tachometer-alt mr-4 text-sm"></i>
+                    Dashboard
+                </button>
+                <button id="tab-proveedores" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-building mr-4 text-sm"></i>
+                    Proveedores
+                </button>
+                <button id="tab-categorias" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-folder mr-4 text-sm"></i>
+                    Categorías
+                </button>
+                <button id="tab-ubicaciones" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-map-marker-alt mr-4 text-sm"></i>
+                    Ubicaciones
+                </button>
+                <button id="tab-productos" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-box mr-4 text-sm"></i>
+                    Productos
+                </button>
+                <button id="tab-variantes" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-layer-group mr-4 text-sm"></i>
+                    Variantes
+                </button>
+                <button id="tab-inventario" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-warehouse mr-4 text-sm"></i>
+                    Inventario
+                </button>
+                <button id="tab-transferencias" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-exchange-alt mr-4 text-sm"></i>
+                    Transferencias
+                </button>
+                <button id="tab-movimientos" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-history mr-4 text-sm"></i>
+                    Movimientos
+                </button>
+                <button id="tab-reportes" class="tab-button tab-inactive group flex items-center px-2 py-2 text-base font-medium rounded-md w-full mb-1 text-left">
+                    <i class="fas fa-chart-bar mr-4 text-sm"></i>
+                    Reportes
+                </button>
+            </nav>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="lg:hidden fixed top-0 left-0 z-40 p-4">
+            <button id="mobile-menu-button" class="bg-indigo-600 text-white p-2 rounded-md">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex flex-col flex-1 overflow-hidden lg:pl-0">
+            <!-- Top header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center py-4">
+                        <div class="flex items-center space-x-4">
+                            <h1 class="text-2xl font-semibold text-gray-900">Sistema de Inventario Inteligente</h1>
+                        </div>
+                        
+                        <!-- Stats Dashboard -->
+                        <div class="hidden md:flex items-center space-x-4">
+                            <div class="bg-blue-50 rounded-lg px-3 py-2 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <i class="fas fa-cube text-blue-600 text-sm"></i>
+                                    <span class="text-blue-700 text-xs font-medium">Productos</span>
+                                </div>
+                                <div id="total-productos" class="text-blue-800 font-bold text-lg">0</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg px-3 py-2 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <i class="fas fa-layer-group text-green-600 text-sm"></i>
+                                    <span class="text-green-700 text-xs font-medium">Variantes</span>
+                                </div>
+                                <div id="total-variantes" class="text-green-800 font-bold text-lg">0</div>
+                            </div>
+                            <div class="bg-red-50 rounded-lg px-3 py-2 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <i class="fas fa-exclamation-triangle text-red-600 text-sm"></i>
+                                    <span class="text-red-700 text-xs font-medium">Stock Bajo</span>
+                                </div>
+                                <div id="total-stock-bajo" class="text-red-800 font-bold text-lg">0</div>
+                            </div>
+                            <div class="bg-purple-50 rounded-lg px-3 py-2 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <i class="fas fa-clock text-purple-600 text-sm"></i>
+                                    <span class="text-purple-700 text-xs font-medium">Hoy</span>
+                                </div>
+                                <div id="total-movimientos-hoy" class="text-purple-800 font-bold text-lg">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main content area -->
+            <main class="flex-1 overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
+                <!-- Loading overlay -->
+                <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-40 backdrop-filter backdrop-blur-sm flex items-center justify-center z-50" style="display: none;">
+                    <div class="bg-white p-8 rounded-lg shadow-lg flex flex-col items-center space-y-4 max-w-sm mx-4">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                        <div class="text-center">
+                            <h3 class="text-lg font-semibold text-gray-900">Cargando...</h3>
+                            <p class="text-sm text-gray-500 mt-1">Por favor espere un momento</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toast notifications container -->
+                <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-3"></div>
+
+                <!-- Content sections will be dynamically loaded here -->
+                <div id="content-container" class="fade-in"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript App -->
+    <script>
+        // Global app state
+        const app = {
+            currentSection: 'dashboard',
+            data: [],
+            isLoading: false,
+            sdk: null,
+            stats: {
+                totalProductos: 0,
+                totalVariantes: 0,
+                stockBajo: 0,
+                movimientosHoy: 0
+            }
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Inicializando XentraStock 3.0...');
+            
+            try {
+                // Show loading
+                setLoading(true);
+                
+                // Initialize SDK
+                await initializeSDK();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Load initial dashboard
+                await loadSection('dashboard');
+                
+                // Update stats immediately and then periodically
+                await updateStats();
+                setInterval(updateStats, 30000); // Every 30 seconds
+                
+                console.log('✅ XentraStock 3.0 inicializado correctamente');
+                showToast('Sistema inicializado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('❌ Error inicializando aplicación:', error);
+                showToast('Error inicializando sistema: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Initialize Data SDK
+        async function initializeSDK() {
+            try {
+                if (typeof window.DataSDK !== 'undefined') {
+                    app.sdk = new window.DataSDK();
+                    app.data = await app.sdk.initialize();
+                    console.log('✅ SDK inicializado correctamente');
+                } else {
+                    console.warn('⚠️ DataSDK no encontrado, usando datos de prueba');
+                    app.data = []; // Fallback to empty data
+                }
+            } catch (error) {
+                console.error('❌ Error inicializando SDK:', error);
+                app.data = []; // Fallback to empty data
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Tab navigation
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const sectionName = e.target.id.replace('tab-', '');
+                    loadSection(sectionName);
+                });
+            });
+
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (mobileMenuButton && sidebar) {
+                mobileMenuButton.addEventListener('click', () => {
+                    sidebar.classList.toggle('-translate-x-full');
+                });
+            }
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth < 1024 && sidebar && !sidebar.contains(e.target) && !mobileMenuButton.contains(e.target)) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        }
+
+        // Load section content
+        async function loadSection(sectionName) {
+            try {
+                setLoading(true);
+                
+                // Update active tab
+                updateActiveTab(sectionName);
+                
+                // Close mobile menu
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && window.innerWidth < 1024) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+                
+                const contentContainer = document.getElementById('content-container');
+                let html = '';
+                
+                // Load section content
+                switch (sectionName) {
+                    case 'dashboard':
+                        html = getDashboardHTML();
+                        break;
+                    case 'proveedores':
+                        html = getProveedoresHTML();
+                        break;
+                    case 'categorias':
+                        html = getCategoriasHTML();
+                        break;
+                    case 'ubicaciones':
+                        html = getUbicacionesHTML();
+                        break;
+                    case 'productos':
+                        html = getProductosHTML();
+                        break;
+                    case 'variantes':
+                        html = getVariantesHTML();
+                        break;
+                    case 'inventario':
+                        html = getInventarioHTML();
+                        break;
+                    case 'transferencias':
+                        html = getTransferenciasHTML();
+                        break;
+                    case 'movimientos':
+                        html = getMovimientosHTML();
+                        break;
+                    case 'reportes':
+                        html = getReportesHTML();
+                        break;
+                    default:
+                        html = '<div class="text-center py-8"><h2 class="text-xl text-gray-600">Sección no encontrada</h2></div>';
+                }
+                
+                contentContainer.innerHTML = html;
+                app.currentSection = sectionName;
+                
+                // Initialize section-specific functionality
+                await initializeSection(sectionName);
+                
+            } catch (error) {
+                console.error('❌ Error cargando sección:', error);
+                showToast('Error cargando sección: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Initialize section-specific functionality
+        async function initializeSection(sectionName) {
+            try {
+                switch (sectionName) {
+                    case 'dashboard':
+                        await initDashboard();
+                        break;
+                    case 'proveedores':
+                        await initProveedores();
+                        break;
+                    case 'categorias':
+                        await initCategorias();
+                        break;
+                    case 'ubicaciones':
+                        await initUbicaciones();
+                        break;
+                    case 'productos':
+                        await initProductos();
+                        break;
+                    case 'variantes':
+                        await initVariantes();
+                        break;
+                    case 'inventario':
+                        await initInventario();
+                        break;
+                    case 'transferencias':
+                        await initTransferencias();
+                        break;
+                    case 'movimientos':
+                        await initMovimientos();
+                        break;
+                    case 'reportes':
+                        await initReportes();
+                        break;
+                }
+            } catch (error) {
+                console.error(`❌ Error inicializando sección ${sectionName}:`, error);
+            }
+        }
+
+        // Update active tab styling
+        function updateActiveTab(activeTabName) {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('tab-active');
+                button.classList.add('tab-inactive');
+            });
+            
+            const activeTab = document.getElementById(`tab-${activeTabName}`);
+            if (activeTab) {
+                activeTab.classList.remove('tab-inactive');
+                activeTab.classList.add('tab-active');
+            }
+        }
+
+        // Update statistics
+        async function updateStats() {
+            try {
+                const productos = filterData(app.data, 'producto');
+                const variantes = filterData(app.data, 'variante');
+                const inventario = filterData(app.data, 'inventario');
+                
+                app.stats.totalProductos = productos.length;
+                app.stats.totalVariantes = variantes.length;
+                app.stats.stockBajo = inventario.filter(item => 
+                    (item.cantidad || 0) <= (item.stockMinimo || 0)
+                ).length;
+                
+                // Update DOM
+                document.getElementById('total-productos').textContent = app.stats.totalProductos;
+                document.getElementById('total-variantes').textContent = app.stats.totalVariantes;
+                document.getElementById('total-stock-bajo').textContent = app.stats.stockBajo;
+                document.getElementById('total-movimientos-hoy').textContent = app.stats.movimientosHoy;
+                
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // Utility functions
+        function setLoading(isLoading) {
+            app.isLoading = isLoading;
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = isLoading ? 'flex' : 'none';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-green-100 border-green-500 text-green-700',
+                error: 'bg-red-100 border-red-500 text-red-700',
+                warning: 'bg-yellow-100 border-yellow-500 text-yellow-700',
+                info: 'bg-blue-100 border-blue-500 text-blue-700'
+            };
+            
+            toast.className = `max-w-sm w-full ${colors[type]} border-l-4 p-4 rounded shadow-lg transform transition-all duration-300 translate-x-full`;
+            toast.innerHTML = `
+                <div class="flex">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium">${message}</p>
+                    </div>
+                    <button class="ml-4 text-lg leading-none cursor-pointer" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('translate-x-full');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function filterData(data, type, searchTerm = '') {
+            if (!data || !Array.isArray(data)) return [];
+            
+            let filtered = data.filter(item => item.tipo === type);
+            
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    Object.values(item).some(value => 
+                        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                );
+            }
+            
+            return filtered;
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Dashboard HTML
+        function getDashboardHTML() {
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-cube text-blue-600 text-2xl"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Total Productos</dt>
+                                            <dd class="text-lg font-medium text-gray-900">${app.stats.totalProductos}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-layer-group text-green-600 text-2xl"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Total Variantes</dt>
+                                            <dd class="text-lg font-medium text-gray-900">${app.stats.totalVariantes}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Stock Bajo</dt>
+                                            <dd class="text-lg font-medium text-gray-900">${app.stats.stockBajo}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white overflow-hidden shadow rounded-lg">
+                            <div class="p-5">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-clock text-purple-600 text-2xl"></i>
+                                    </div>
+                                    <div class="ml-5 w-0 flex-1">
+                                        <dl>
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Movimientos Hoy</dt>
+                                            <dd class="text-lg font-medium text-gray-900">${app.stats.movimientosHoy}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">¡Bienvenido a XentraStock 3.0!</h2>
+                        <p class="text-gray-600">Sistema de inventario inteligente para gestionar tus productos, variantes y ubicaciones de manera eficiente.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Placeholder functions for other sections
+        async function initDashboard() {
+            console.log('Dashboard initialized');
+        }
+
+        // Tab styles helper
+        const styles = document.createElement('style');
+        styles.textContent = `
+            .tab-active {
+                background-color: #4f46e5;
+                color: white;
+            }
+            .tab-inactive {
+                color: #6b7280;
+                background-color: transparent;
+            }
+            .tab-inactive:hover {
+                background-color: #f3f4f6;
+                color: #374151;
+            }
+            .fade-in {
+                animation: fadeIn 0.3s ease-in;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styles);
+    </script>
+
+    <!-- Load module scripts -->
+    <script src="js/inventario.js"></script>
+    <script src="js/productos.js"></script>
+    <script src="js/proveedores.js"></script>
+    <script src="js/categorias.js"></script>
+    <script src="js/ubicaciones.js"></script>
+    <script src="js/variantes.js"></script>
+    <script src="js/transferencias.js"></script>
+    <script src="js/movimientos.js"></script>
+    <script src="js/reportes.js"></script>
+</body>
+</html>

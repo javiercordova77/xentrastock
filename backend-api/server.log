@@ -1,0 +1,28 @@
+✅ Conectado a SQLite: ./src/database/xentrastock.db
+✅ Tablas creadas correctamente
+✅ Índices creados correctamente
+📊 Datos semilla ya existen, omitiendo inserción
+✅ Base de datos inicializada correctamente
+🚀 XentraStock v3.0 API Server
+📅 Iniciado: 31/10/2025, 10:57:50
+🌐 Puerto: 3001
+🔗 URL: http://localhost:3001
+💻 Health Check: http://localhost:3001/health
+📊 API Base: http://localhost:3001/api
+🔄 Modo: development
+✅ Servidor listo para recibir peticiones
+::1 - - [31/Oct/2025:15:57:58 +0000] "GET /health HTTP/1.1" 200 123 "-" "-"
+::1 - - [31/Oct/2025:15:57:58 +0000] "GET /api/categorias HTTP/1.1" 200 647 "-" "-"
+::1 - - [31/Oct/2025:15:57:58 +0000] "GET /api/proveedores HTTP/1.1" 200 655 "-" "-"
+::1 - - [31/Oct/2025:15:57:58 +0000] "POST /api/categorias HTTP/1.1" 201 257 "-" "-"
+::1 - - [31/Oct/2025:15:57:58 +0000] "GET /api/categorias HTTP/1.1" 200 838 "-" "-"
+::1 - - [31/Oct/2025:16:04:15 +0000] "GET /health HTTP/1.1" 200 123 "-" "-"
+::1 - - [31/Oct/2025:16:04:15 +0000] "GET /api/categorias HTTP/1.1" 200 838 "-" "-"
+::1 - - [31/Oct/2025:16:04:15 +0000] "GET /api/proveedores HTTP/1.1" 200 655 "-" "-"
+::1 - - [31/Oct/2025:16:04:15 +0000] "POST /api/categorias HTTP/1.1" 201 257 "-" "-"
+::1 - - [31/Oct/2025:16:04:15 +0000] "GET /api/categorias HTTP/1.1" 200 1029 "-" "-"
+::1 - - [31/Oct/2025:16:05:34 +0000] "POST /api/categorias HTTP/1.1" 201 232 "-" "-"
+::1 - - [31/Oct/2025:16:05:34 +0000] "POST /api/proveedores HTTP/1.1" 201 295 "-" "-"
+::1 - - [31/Oct/2025:16:05:34 +0000] "GET /api/categorias HTTP/1.1" 200 1195 "-" "-"
+::1 - - [31/Oct/2025:16:05:34 +0000] "GET /api/proveedores HTTP/1.1" 200 885 "-" "-"
+🛑 Cerrando servidor...
