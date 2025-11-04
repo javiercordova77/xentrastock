@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🚀 Script para levantar los servicios de XentraStock
+# 🚀 Script para levantar los servicios de XentraStock v3.0 Moderno
 # Uso: ./start-services.sh
 
-echo "🚀 Iniciando servicios de XentraStock..."
+echo "🚀 Iniciando servicios de XentraStock v3.0..."
 
 # Directorio base del proyecto
 PROJECT_DIR="/Users/javiercordova/Documents/GitHub/xentrastock"
@@ -28,19 +28,19 @@ kill_port() {
 echo ""
 echo "📋 Verificando estado actual..."
 
-# Verificar puertos
+# Verificar puertos (Backend: 3001, Frontend: 8080)
 if check_port 3001; then
-    echo "⚠️  Puerto 3001 (Backend) está en uso"
+    echo "⚠️  Puerto 3001 (Backend API) está en uso"
     kill_port 3001
 fi
 
-if check_port 3000; then
-    echo "⚠️  Puerto 3000 (Frontend) está en uso"
-    kill_port 3000
+if check_port 8080; then
+    echo "⚠️  Puerto 8080 (Frontend) está en uso"
+    kill_port 8080
 fi
 
 echo ""
-echo "🎯 Iniciando Backend (Puerto 3001)..."
+echo "🎯 Iniciando Backend API (Puerto 3001)..."
 
 # Iniciar backend
 cd "$PROJECT_DIR/backend-api" || {
@@ -61,71 +61,82 @@ echo "   ✅ Backend iniciado (PID: $BACKEND_PID)"
 
 # Esperar a que el backend esté listo
 echo "   ⏳ Esperando a que el backend esté listo..."
-for i in {1..10}; do
+for i in {1..15}; do
     if curl -s http://localhost:3001/health > /dev/null 2>&1; then
-        echo "   ✅ Backend respondiendo en http://localhost:3001"
+        echo "   ✅ Backend API respondiendo en http://localhost:3001"
         break
     fi
-    sleep 2
-    if [ $i -eq 10 ]; then
-        echo "   ❌ Backend no responde después de 20 segundos"
+    sleep 1
+    if [ $i -eq 15 ]; then
+        echo "   ❌ Backend no responde después de 15 segundos"
+        echo "   📋 Revisar log: tail -f backend.log"
         exit 1
     fi
 done
 
 echo ""
-echo "🎨 Iniciando Frontend (Puerto 3000)..."
+echo "🎨 Iniciando Frontend Moderno (Puerto 8080)..."
 
-# Cambiar al directorio del frontend
-cd "$PROJECT_DIR/frontend-react" || {
-    echo "❌ Error: No se puede acceder al directorio frontend-react"
+# Cambiar al directorio raíz del proyecto
+cd "$PROJECT_DIR" || {
+    echo "❌ Error: No se puede acceder al directorio del proyecto"
     exit 1
 }
 
-# Verificar que existe package.json
-if [ ! -f "package.json" ]; then
-    echo "❌ Error: No se encuentra package.json en frontend-react"
+# Verificar que existe el frontend server
+if [ ! -f "frontend-server.js" ]; then
+    echo "❌ Error: No se encuentra frontend-server.js"
     exit 1
 fi
 
-# Iniciar frontend en background
-nohup npm start > ../frontend.log 2>&1 &
+# Verificar que existe la interfaz moderna
+if [ ! -f "index_modern.html" ]; then
+    echo "❌ Error: No se encuentra index_modern.html"
+    exit 1
+fi
+
+# Iniciar servidor frontend en background
+nohup node frontend-server.js > frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "   ✅ Frontend iniciado (PID: $FRONTEND_PID)"
 
-# Esperar a que el frontend esté listo (toma más tiempo por la compilación)
-echo "   ⏳ Esperando a que el frontend compile y esté listo..."
-for i in {1..30}; do
-    if curl -s -I http://localhost:3000 > /dev/null 2>&1; then
-        echo "   ✅ Frontend respondiendo en http://localhost:3000"
+# Esperar a que el frontend esté listo
+echo "   ⏳ Esperando a que el frontend esté listo..."
+for i in {1..10}; do
+    if curl -s -I http://localhost:8080 > /dev/null 2>&1; then
+        echo "   ✅ Frontend moderno respondiendo en http://localhost:8080"
         break
     fi
-    sleep 3
-    if [ $i -eq 30 ]; then
-        echo "   ⚠️  Frontend puede estar tardando en compilar (revisar frontend.log)"
+    sleep 1
+    if [ $i -eq 10 ]; then
+        echo "   ⚠️  Frontend puede estar tardando en iniciar (revisar frontend.log)"
     fi
 done
 
 echo ""
-echo "🎉 ¡Servicios iniciados exitosamente!"
+echo "🎉 ¡Servicios XentraStock v3.0 iniciados exitosamente!"
 echo ""
-echo "📱 URLs disponibles:"
-echo "   🌐 Frontend:     http://localhost:3000"
-echo "   ⚙️  Backend API:  http://localhost:3001"
-echo "   💚 Health Check: http://localhost:3001/health"
+echo "🌐 URLs disponibles:"
+echo "   🚀 Interfaz Moderna: http://localhost:8080/modern"
+echo "   🏠 Página Principal:  http://localhost:8080"
+echo "   ⚙️  Backend API:      http://localhost:3001/api"
+echo "   💚 Health Check:     http://localhost:3001/health"
 echo ""
 echo "📊 PIDs de los procesos:"
-echo "   Backend:  $BACKEND_PID"
-echo "   Frontend: $FRONTEND_PID"
+echo "   Backend API:      $BACKEND_PID"
+echo "   Frontend Moderno: $FRONTEND_PID"
 echo ""
-echo "📝 Logs:"
-echo "   Backend:  $PROJECT_DIR/backend.log"
-echo "   Frontend: $PROJECT_DIR/frontend.log"
-echo ""
-echo "🛑 Para detener los servicios:"
-echo "   kill $BACKEND_PID $FRONTEND_PID"
-echo "   o ejecuta: ./stop-services.sh"
-echo ""
-echo "🔍 Monitorear logs en tiempo real:"
+echo "📝 Logs en tiempo real:"
 echo "   Backend:  tail -f $PROJECT_DIR/backend.log"
 echo "   Frontend: tail -f $PROJECT_DIR/frontend.log"
+echo ""
+echo "📱 Recomendación: Abre http://localhost:8080/modern para la nueva interfaz"
+echo ""
+echo "🛑 Para detener todos los servicios:"
+echo "   ./stop-services.sh"
+echo "   o manualmente: kill $BACKEND_PID $FRONTEND_PID"
+echo ""
+echo "� Comandos útiles:"
+echo "   Reiniciar Backend:  kill $BACKEND_PID && cd backend-api && node src/server.js &"
+echo "   Reiniciar Frontend: kill $FRONTEND_PID && node frontend-server.js &"
+echo "   Ver APIs:          curl http://localhost:3001/api"

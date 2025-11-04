@@ -166,6 +166,7 @@ router.get('/', asyncHandler(async (req, res) => {
 
     res.json({
         success: true,
+        isOk: true,
         data: Object.values(inventarioAgrupado),
         pagination: {
             page: parseInt(page),
@@ -267,6 +268,7 @@ router.get('/producto/:productoId', asyncHandler(async (req, res) => {
 
     res.json({
         success: true,
+        isOk: true,
         data: producto
     });
 }));
@@ -303,6 +305,7 @@ router.get('/resumen', asyncHandler(async (req, res) => {
 
     res.json({
         success: true,
+        isOk: true,
         data: resumen
     });
 }));
@@ -331,6 +334,7 @@ router.get('/stock-ubicacion/:varianteId/:ubicacionId', asyncHandler(async (req,
 	if (!stock) {
 		return res.json({ 
 			success: true, 
+			isOk: true,
 			data: { 
 				cantidad_disponible: 0,
 				mensaje: 'No hay stock en esta ubicación' 
@@ -338,7 +342,7 @@ router.get('/stock-ubicacion/:varianteId/:ubicacionId', asyncHandler(async (req,
 		});
 	}
 	
-	res.json({ success: true, data: stock });
+	res.json({ success: true, isOk: true, data: stock });
 }));
 
 module.exports = router;

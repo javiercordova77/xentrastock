@@ -13,9 +13,11 @@ const productosRoutes = require('./productos-colchonesw');
 const variantesRoutes = require('./variantes-colchonesw');
 const coloresVariantesRoutes = require('./colores-variantes');
 const inventarioRoutes = require('./inventario-colchonesw');
+const inventarioLegacyRoutes = require('./inventario-legacy');
 const movimientosRoutes = require('./movimientos');
 const transferenciasRoutes = require('./transferencias');
 const reportesRoutes = require('./reportes');
+const legacyRoutes = require('./legacy');
 
 // Configurar rutas
 router.use('/proveedores', proveedoresRoutes);
@@ -26,9 +28,11 @@ router.use('/variantes', variantesRoutes);
 router.use('/colores-variantes', coloresVariantesRoutes);
 router.use('/inventario', inventarioRoutes);
 router.use('/inventario-colchonesw', inventarioRoutes);
+router.use('/inventario-legacy', inventarioLegacyRoutes);
 router.use('/movimientos', movimientosRoutes);
 router.use('/transferencias', transferenciasRoutes);
 router.use('/reportes', reportesRoutes);
+router.use('/legacy', legacyRoutes);
 
 // Ruta de información de la API
 router.get('/', (req, res) => {
@@ -47,7 +51,8 @@ router.get('/', (req, res) => {
             inventario_colchonesw: '/api/inventario-colchonesw',
             movimientos: '/api/movimientos',
             transferencias: '/api/transferencias',
-            reportes: '/api/reportes'
+            reportes: '/api/reportes',
+            legacy_data: '/api/legacy/data'
         }
     });
 });

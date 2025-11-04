@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🛑 Script para detener los servicios de XentraStock
+# 🛑 Script para detener los servicios de XentraStock v3.0
 # Uso: ./stop-services.sh
 
-echo "🛑 Deteniendo servicios de XentraStock..."
+echo "🛑 Deteniendo servicios de XentraStock v3.0..."
 
 # Función para matar procesos en un puerto
 kill_port() {
@@ -19,26 +19,29 @@ kill_port() {
     fi
 }
 
-# Detener backend (puerto 3001)
-kill_port 3001 "Backend"
+# Detener backend API (puerto 3001)
+kill_port 3001 "Backend API"
 
-# Detener frontend (puerto 3000)
-kill_port 3000 "Frontend"
+# Detener frontend moderno (puerto 8080)
+kill_port 8080 "Frontend Moderno"
 
-# Matar procesos específicos por nombre
+# Matar procesos específicos por nombre relacionados con xentrastock
 echo ""
-echo "🧹 Limpiando procesos residuales..."
+echo "🧹 Limpiando procesos residuales de XentraStock..."
 
-# Matar procesos de node relacionados con el proyecto
+# Matar procesos específicos del proyecto
 pkill -f "xentrastock.*node" 2>/dev/null || true
-pkill -f "react-scripts.*start" 2>/dev/null || true
-pkill -f "npm.*start" 2>/dev/null || true
+pkill -f "frontend-server.js" 2>/dev/null || true
+pkill -f "backend-api.*server.js" 2>/dev/null || true
 
 echo "   ✅ Procesos residuales limpiados"
 
 echo ""
-echo "✅ Todos los servicios han sido detenidos"
+echo "✅ Todos los servicios de XentraStock v3.0 han sido detenidos"
 echo ""
 echo "📝 Los archivos de log siguen disponibles:"
-echo "   Backend:  backend.log"
-echo "   Frontend: frontend.log"
+echo "   Backend API:      backend.log"
+echo "   Frontend Moderno: frontend.log"
+echo ""
+echo "🚀 Para reiniciar todos los servicios:"
+echo "   ./start-services.sh"
