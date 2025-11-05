@@ -55,26 +55,30 @@ window.dashboardModule = {
     async loadStats() {
         try {
             // Productos totales
-            const products = await window.api.request('/api/productos');
-            this.data.stats.totalProducts = products.length;
+            const products = await window.app.apiRequest('/api/productos');
+            this.data.stats.totalProducts = products?.data?.length || 0;
 
             // Variantes totales
-            const variants = await window.api.request('/api/variantes');
-            this.data.stats.totalVariants = variants.length;
+            const variants = await window.app.apiRequest('/api/variantes');
+            this.data.stats.totalVariants = variants?.data?.length || 0;
 
             // Stock total y valor
-            const inventory = await window.api.request('/api/inventario');
-            this.data.stats.totalStock = inventory.reduce((sum, item) => sum + (item.cantidad || 0), 0);
-            this.data.stats.totalValue = inventory.reduce((sum, item) => sum + ((item.cantidad || 0) * (item.precio || 0)), 0);
-            this.data.stats.lowStockItems = inventory.filter(item => (item.cantidad || 0) < 10).length;
+            const inventory = await window.app.apiRequest('/api/inventario');
+            if (inventory.success && inventory.data) {
+                this.data.stats.totalStock = inventory.data.reduce((sum, item) => sum + (item.stock_total || 0), 0);
+                this.data.stats.totalValue = inventory.data.reduce((sum, item) => sum + ((item.stock_total || 0) * (item.precio_venta || 0)), 0);
+                this.data.stats.lowStockItems = inventory.data.filter(item => 
+                    item.ubicaciones && item.ubicaciones.some(ub => ub.stock_disponible <= ub.stock_minimo)
+                ).length;
+            }
 
             // Ubicaciones
-            const locations = await window.api.request('/api/ubicaciones');
-            this.data.stats.totalLocations = locations.length;
+            const locations = await window.app.apiRequest('/api/ubicaciones');
+            this.data.stats.totalLocations = locations?.data?.length || 0;
 
             // Proveedores
-            const providers = await window.api.request('/api/proveedores');
-            this.data.stats.totalProviders = providers.length;
+            const providers = await window.app.apiRequest('/api/proveedores');
+            this.data.stats.totalProviders = providers?.data?.length || 0;
 
             // Transferencias pendientes (simulated for now)
             this.data.stats.pendingTransfers = 2;
@@ -86,8 +90,8 @@ window.dashboardModule = {
 
     async loadRecentMovements() {
         try {
-            const movements = await window.api.request('/api/movimientos?limit=10');
-            this.data.recentMovements = movements;
+            const movements = await window.app.apiRequest('/api/movimientos?limit=10');
+            this.data.recentMovements = movements?.data || [];
         } catch (error) {
             console.error('Error cargando movimientos recientes:', error);
             this.data.recentMovements = [];
@@ -96,17 +100,26 @@ window.dashboardModule = {
 
     async loadLowStockAlerts() {
         try {
-            const inventory = await window.api.request('/api/inventario');
-            this.data.lowStockAlerts = inventory
-                .filter(item => (item.cantidad || 0) < 10)
-                .slice(0, 5)
-                .map(item => ({
-                    id: item.id,
-                    name: item.nombre || 'Producto sin nombre',
-                    variant: item.variante || 'Sin variante',
-                    stock: item.cantidad || 0,
-                    location: item.ubicacion || 'Sin ubicación'
-                }));
+            const inventory = await window.app.apiRequest('/api/inventario');
+            if (inventory.success && inventory.data) {
+                this.data.lowStockAlerts = inventory.data
+                    .filter(item => {
+                        // Filtrar items con stock bajo
+                        return item.ubicaciones && item.ubicaciones.some(ub => 
+                            ub.stock_disponible <= ub.stock_minimo
+                        );
+                    })
+                    .slice(0, 5)
+                    .map(item => ({
+                        id: item.variante_id,
+                        name: item.producto_descripcion || 'Producto sin nombre',
+                        variant: item.codigo_variante || 'Sin variante',
+                        stock: item.stock_total || 0,
+                        location: item.ubicaciones?.map(ub => ub.ubicacion_nombre).join(', ') || 'Sin ubicación'
+                    }));
+            } else {
+                this.data.lowStockAlerts = [];
+            }
         } catch (error) {
             console.error('Error cargando alertas de stock:', error);
             this.data.lowStockAlerts = [];

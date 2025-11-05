@@ -20,9 +20,14 @@ window.proveedoresModule = {
 
     async loadProviders() {
         try {
-            const providers = await window.api.request('/api/proveedores');
-            this.data.providers = providers;
-            this.data.filteredProviders = [...providers];
+            const response = await window.app.apiRequest('/api/proveedores');
+            if (response.success) {
+                this.data.providers = response.data || [];
+                this.data.filteredProviders = [...this.data.providers];
+            } else {
+                this.data.providers = [];
+                this.data.filteredProviders = [];
+            }
         } catch (error) {
             console.error('Error cargando proveedores:', error);
             window.app.showToast('error', 'Error', 'No se pudieron cargar los proveedores');
@@ -167,14 +172,14 @@ window.proveedoresModule = {
         try {
             if (this.data.editingProvider) {
                 // Update existing provider
-                await window.api.request(`/api/proveedores/${this.data.editingProvider.id}`, {
+                await window.app.apiRequest(`/api/proveedores/${this.data.editingProvider.id}`, {
                     method: 'PUT',
                     body: JSON.stringify(providerData)
                 });
                 window.app.showToast('success', 'Éxito', 'Proveedor actualizado correctamente');
             } else {
                 // Create new provider
-                await window.api.request('/api/proveedores', {
+                await window.app.apiRequest('/api/proveedores', {
                     method: 'POST',
                     body: JSON.stringify(providerData)
                 });
@@ -207,7 +212,7 @@ window.proveedoresModule = {
         if (!confirmed) return;
 
         try {
-            await window.api.request(`/api/proveedores/${id}`, {
+            await window.app.apiRequest(`/api/proveedores/${id}`, {
                 method: 'DELETE'
             });
             

@@ -40,17 +40,17 @@ window.inventarioModule = {
         try {
             // Cargar datos en paralelo
             const [inventory, categories, locations, providers] = await Promise.all([
-                window.api.request('/api/inventario'),
-                window.api.request('/api/categorias'),
-                window.api.request('/api/ubicaciones'),
-                window.api.request('/api/proveedores')
+                window.app.apiRequest('/api/inventario'),
+                window.app.apiRequest('/api/categorias'),
+                window.app.apiRequest('/api/ubicaciones'),
+                window.app.apiRequest('/api/proveedores')
             ]);
 
-            this.data.items = inventory;
-            this.data.filteredItems = [...inventory];
-            this.data.categories = categories;
-            this.data.locations = locations;
-            this.data.providers = providers;
+            this.data.items = inventory?.data || [];
+            this.data.filteredItems = [...this.data.items];
+            this.data.categories = categories?.data || [];
+            this.data.locations = locations?.data || [];
+            this.data.providers = providers?.data || [];
             
             this.updateFilterOptions();
             this.applyFilters();

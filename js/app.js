@@ -486,7 +486,7 @@ window.api = {
         const config = { ...defaultOptions, ...options };
         
         try {
-            const response = await fetch(`http://localhost:3000${endpoint}`, config);
+            const response = await fetch(`http://localhost:3001${endpoint}`, config);
             
             if (!response.ok) {
                 throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -497,5 +497,17 @@ window.api = {
             console.error('API Error:', error);
             throw error;
         }
+    }
+};
+
+// Asegurar que window.app tenga acceso a las funciones principales
+window.app = window.app || {};
+window.app.apiRequest = window.api.request;
+window.app.showToast = (type, title, message, duration) => {
+    const appInstance = window.Alpine ? window.Alpine.store('app') : null;
+    if (appInstance && appInstance.showToast) {
+        appInstance.showToast(type, title, message, duration);
+    } else {
+        console.log(`Toast: ${title} - ${message}`);
     }
 };
