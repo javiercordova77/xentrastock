@@ -1,0 +1,261 @@
+/* ============================================================ */
+/* XENTRASTOCK v3.0 - PALETA DE COLORES ESTÁNDAR PROFESIONAL */
+/* ============================================================ */
+
+/* Paleta de colores única y consistente para toda la aplicación */
+/* Enfoque: Profesional, limpio, accesible y moderno */
+
+:root {
+    /* ========== COLORES PRIMARIOS - AZUL CORPORATIVO ========== */
+    --xs-primary: #3B82F6;           /* Azul principal moderno */
+    --xs-primary-light: #60A5FA;     /* Azul claro para hover */
+    --xs-primary-dark: #1D4ED8;      /* Azul oscuro para activos */
+    --xs-primary-50: #EFF6FF;        /* Azul muy claro para fondos */
+    --xs-primary-100: #DBEAFE;       /* Azul claro para borders */
+    --xs-primary-500: #3B82F6;       /* Azul principal */
+    --xs-primary-600: #2563EB;       /* Azul medio */
+    --xs-primary-700: #1D4ED8;       /* Azul oscuro */
+    --xs-primary-800: #1E40AF;       /* Azul muy oscuro */
+    --xs-primary-900: #1E3A8A;       /* Azul extremadamente oscuro */
+
+    /* ========== COLORES NEUTROS - GRISES MODERNOS ========== */
+    --xs-gray-50: #F9FAFB;           /* Fondo principal */
+    --xs-gray-100: #F3F4F6;          /* Fondo secundario */
+    --xs-gray-200: #E5E7EB;          /* Bordes suaves */
+    --xs-gray-300: #D1D5DB;          /* Bordes normales */
+    --xs-gray-400: #9CA3AF;          /* Texto placeholder */
+    --xs-gray-500: #6B7280;          /* Texto secundario */
+    --xs-gray-600: #4B5563;          /* Texto normal */
+    --xs-gray-700: #374151;          /* Texto importante */
+    --xs-gray-800: #1F2937;          /* Texto muy importante */
+    --xs-gray-900: #111827;          /* Texto máximo contraste */
+
+    /* ========== COLORES DE ESTADO ========== */
+    /* Verde para éxito */
+    --xs-success: #10B981;
+    --xs-success-light: #34D399;
+    --xs-success-dark: #059669;
+    --xs-success-50: #ECFDF5;
+    --xs-success-100: #D1FAE5;
+    --xs-success-500: #10B981;
+    --xs-success-600: #059669;
+    --xs-success-700: #047857;
+
+    /* Rojo para errores */
+    --xs-error: #EF4444;
+    --xs-error-light: #F87171;
+    --xs-error-dark: #DC2626;
+    --xs-error-50: #FEF2F2;
+    --xs-error-100: #FEE2E2;
+    --xs-error-500: #EF4444;
+    --xs-error-600: #DC2626;
+    --xs-error-700: #B91C1C;
+
+    /* Amarillo para advertencias */
+    --xs-warning: #F59E0B;
+    --xs-warning-light: #FBBF24;
+    --xs-warning-dark: #D97706;
+    --xs-warning-50: #FFFBEB;
+    --xs-warning-100: #FEF3C7;
+    --xs-warning-500: #F59E0B;
+    --xs-warning-600: #D97706;
+    --xs-warning-700: #B45309;
+
+    /* Azul para información */
+    --xs-info: #3B82F6;
+    --xs-info-light: #60A5FA;
+    --xs-info-dark: #1D4ED8;
+    --xs-info-50: #EFF6FF;
+    --xs-info-100: #DBEAFE;
+
+    /* ========== COLORES DE SUPERFICIE ========== */
+    --xs-bg: #FFFFFF;                /* Fondo principal */
+    --xs-surface: #FFFFFF;           /* Superficie cards */
+    --xs-surface-gray: #F9FAFB;      /* Superficie alternativa */
+    --xs-border: #E5E7EB;            /* Bordes estándar */
+    --xs-border-light: #F3F4F6;      /* Bordes suaves */
+    --xs-border-dark: #D1D5DB;       /* Bordes definidos */
+
+    /* ========== COLORES DE TEXTO ========== */
+    --xs-text: #111827;              /* Texto principal */
+    --xs-text-secondary: #6B7280;    /* Texto secundario */
+    --xs-text-muted: #9CA3AF;        /* Texto placeholder */
+    --xs-text-white: #FFFFFF;        /* Texto sobre fondos oscuros */
+
+    /* ========== SOMBRAS ESTÁNDAR ========== */
+    --xs-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --xs-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --xs-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --xs-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --xs-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* ========== ESPACIADO Y DIMENSIONES ========== */
+    --xs-border-radius: 0.375rem;    /* 6px - Radio estándar */
+    --xs-border-radius-lg: 0.5rem;   /* 8px - Radio grande */
+    --xs-border-radius-xl: 0.75rem;  /* 12px - Radio extra grande */
+
+    /* ========== TRANSICIONES ========== */
+    --xs-transition: all 0.15s ease-in-out;
+    --xs-transition-fast: all 0.1s ease-in-out;
+    --xs-transition-slow: all 0.3s ease-in-out;
+}
+
+/* ========== CLASES UTILITARIAS - COLORES DE FONDO ========== */
+.xs-bg-primary { background-color: var(--xs-primary) !important; color: var(--xs-text-white) !important; }
+.xs-bg-primary-light { background-color: var(--xs-primary-light) !important; color: var(--xs-text-white) !important; }
+.xs-bg-primary-dark { background-color: var(--xs-primary-dark) !important; color: var(--xs-text-white) !important; }
+
+.xs-bg-success { background-color: var(--xs-success) !important; color: var(--xs-text-white) !important; }
+.xs-bg-error { background-color: var(--xs-error) !important; color: var(--xs-text-white) !important; }
+.xs-bg-warning { background-color: var(--xs-warning) !important; color: var(--xs-text-white) !important; }
+
+.xs-bg-gray-50 { background-color: var(--xs-gray-50) !important; }
+.xs-bg-gray-100 { background-color: var(--xs-gray-100) !important; }
+.xs-bg-surface { background-color: var(--xs-surface) !important; }
+
+/* ========== CLASES UTILITARIAS - COLORES DE TEXTO ========== */
+.xs-text-primary { color: var(--xs-primary) !important; }
+.xs-text-success { color: var(--xs-success) !important; }
+.xs-text-error { color: var(--xs-error) !important; }
+.xs-text-warning { color: var(--xs-warning) !important; }
+.xs-text-secondary { color: var(--xs-text-secondary) !important; }
+.xs-text-muted { color: var(--xs-text-muted) !important; }
+
+/* ========== CLASES UTILITARIAS - BORDES ========== */
+.xs-border { border-color: var(--xs-border) !important; }
+.xs-border-primary { border-color: var(--xs-primary) !important; }
+.xs-border-success { border-color: var(--xs-success) !important; }
+.xs-border-error { border-color: var(--xs-error) !important; }
+.xs-border-warning { border-color: var(--xs-warning) !important; }
+
+/* ========== COMPONENTES ESTÁNDAR ========== */
+/* Botones primarios */
+.xs-btn-primary {
+    background-color: var(--xs-primary);
+    color: var(--xs-text-white);
+    border: 1px solid var(--xs-primary);
+    border-radius: var(--xs-border-radius);
+    transition: var(--xs-transition);
+}
+
+.xs-btn-primary:hover {
+    background-color: var(--xs-primary-dark);
+    border-color: var(--xs-primary-dark);
+}
+
+.xs-btn-primary:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Botones secundarios */
+.xs-btn-secondary {
+    background-color: var(--xs-surface);
+    color: var(--xs-text);
+    border: 1px solid var(--xs-border);
+    border-radius: var(--xs-border-radius);
+    transition: var(--xs-transition);
+}
+
+.xs-btn-secondary:hover {
+    background-color: var(--xs-gray-50);
+    border-color: var(--xs-border-dark);
+}
+
+/* Cards estándar */
+.xs-card {
+    background-color: var(--xs-surface);
+    border: 1px solid var(--xs-border);
+    border-radius: var(--xs-border-radius-lg);
+    box-shadow: var(--xs-shadow-sm);
+    transition: var(--xs-transition);
+}
+
+.xs-card:hover {
+    box-shadow: var(--xs-shadow-md);
+}
+
+/* Sidebar estándar */
+.xs-sidebar {
+    background-color: var(--xs-primary);
+    color: var(--xs-text-white);
+}
+
+.xs-sidebar-item {
+    color: rgba(255, 255, 255, 0.8);
+    transition: var(--xs-transition);
+}
+
+.xs-sidebar-item:hover {
+    color: var(--xs-text-white);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.xs-sidebar-item.active {
+    color: var(--xs-text-white);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Headers de módulos */
+.xs-module-header {
+    background-color: var(--xs-surface);
+    border-bottom: 1px solid var(--xs-border);
+    color: var(--xs-text);
+}
+
+/* Inputs estándar */
+.xs-input {
+    border: 1px solid var(--xs-border);
+    border-radius: var(--xs-border-radius);
+    background-color: var(--xs-surface);
+    color: var(--xs-text);
+    transition: var(--xs-transition);
+}
+
+.xs-input:focus {
+    border-color: var(--xs-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Estados de alerta */
+.xs-alert-success {
+    background-color: var(--xs-success-50);
+    border: 1px solid var(--xs-success-100);
+    color: var(--xs-success-700);
+}
+
+.xs-alert-error {
+    background-color: var(--xs-error-50);
+    border: 1px solid var(--xs-error-100);
+    color: var(--xs-error-700);
+}
+
+.xs-alert-warning {
+    background-color: var(--xs-warning-50);
+    border: 1px solid var(--xs-warning-100);
+    color: var(--xs-warning-700);
+}
+
+/* ========== MODO OSCURO (Para implementación futura) ========== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --xs-bg: #1F2937;
+        --xs-surface: #374151;
+        --xs-text: #F9FAFB;
+        --xs-text-secondary: #D1D5DB;
+        --xs-border: #4B5563;
+    }
+}
+
+/* ========== COMPATIBILIDAD CON VERSIONES ANTERIORES ========== */
+:root {
+    --color-primary: var(--xs-primary);
+    --color-secondary: var(--xs-text-secondary);
+    --color-bg: var(--xs-bg);
+    --color-surface: var(--xs-surface);
+    --color-text: var(--xs-text);
+    --color-success: var(--xs-success);
+    --color-warning: var(--xs-warning);
+    --color-error: var(--xs-error);
+    --color-border: var(--xs-border);
+}

@@ -96,6 +96,13 @@ function appData() {
             window.addEventListener('resize', () => {
                 this.checkMobile();
             });
+            
+            // Prevenir cierre accidental del menú móvil
+            this.$watch('isMobileMenuOpen', (value) => {
+                if (this.isMobile) {
+                    document.body.classList.toggle('mobile-menu-open', value);
+                }
+            });
         },
 
         // Detectar dispositivo móvil
@@ -130,17 +137,29 @@ function appData() {
             this.isSidebarCollapsed = !this.isSidebarCollapsed;
             this.saveState();
         },
+        
+        // Toggle específico para menú móvil
+        toggleMobileMenu() {
+            if (this.isMobile) {
+                this.isMobileMenuOpen = !this.isMobileMenuOpen;
+                console.log('Mobile menu toggled:', this.isMobileMenuOpen);
+            }
+        },
 
         setActiveModule(moduleId) {
+            console.log('Setting active module:', moduleId, 'isMobile:', this.isMobile);
+            
             if (this.activeModule !== moduleId) {
                 this.activeModule = moduleId;
                 this.saveState();
                 this.loadModule(moduleId);
-                
-                // Cerrar menú móvil
-                if (this.isMobile) {
+            }
+            
+            // Cerrar menú móvil después de seleccionar (con pequeño delay para mejor UX)
+            if (this.isMobile && this.isMobileMenuOpen) {
+                setTimeout(() => {
                     this.isMobileMenuOpen = false;
-                }
+                }, 150);
             }
         },
 

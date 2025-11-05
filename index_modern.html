@@ -151,10 +151,14 @@
                 transform: translateX(-100%);
             }
             .sidebar-mobile-open {
-                transform: translateX(0);
+                transform: translateX(0) !important;
             }
             .content-collapsed, .content-expanded {
                 margin-left: 0;
+            }
+            /* Prevenir scroll del body cuando el menú móvil está abierto */
+            body.mobile-menu-open {
+                overflow: hidden;
             }
         }
     </style>
@@ -175,8 +179,9 @@
         <!-- Sidebar -->
     <div class="fixed inset-y-0 left-0 z-50 bg-slate-900 shadow-xl transition-all duration-300 ease-in-out sidebar"
          :class="{
-             'sidebar-expanded': !isSidebarCollapsed,
-             'sidebar-collapsed': isSidebarCollapsed
+             'sidebar-expanded': !isSidebarCollapsed && !isMobile,
+             'sidebar-collapsed': isSidebarCollapsed && !isMobile,
+             'sidebar-mobile-open': isMobileMenuOpen && isMobile
          }"
          x-show="isMobileMenuOpen || !isMobile" 
          x-transition:enter="transition ease-out duration-300"
@@ -184,10 +189,11 @@
          x-transition:enter-end="translate-x-0"
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="-translate-x-full">
+         x-transition:leave-end="-translate-x-full"
+         @click.away="isMobile && (isMobileMenuOpen = false)">
         
         <!-- Sidebar Content -->
-        <div class="flex flex-col h-full">
+        <div class="flex flex-col h-full" @click.stop="">
             <!-- Header -->
             <div class="flex items-center justify-between h-16 px-4 border-b border-slate-700">
                 <div class="flex items-center space-x-3">
@@ -202,7 +208,7 @@
                         class="text-slate-300 hover:text-white hover:bg-slate-700 p-2 rounded-lg transition-all duration-200 hidden md:block">
                     <i class="fas fa-bars text-sm"></i>
                 </button>
-                <button @click="isMobileMenuOpen = false" 
+                <button @click.stop="isMobileMenuOpen = false" 
                         class="text-slate-300 hover:text-white hover:bg-slate-700 p-2 rounded-lg transition-all duration-200 md:hidden">
                     <i class="fas fa-times text-sm"></i>
                 </button>
@@ -212,7 +218,7 @@
             <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 <template x-for="item in menuItems" :key="item.id">
                     <div>
-                        <button @click="setActiveModule(item.id)"
+                        <button @click.stop="setActiveModule(item.id)"
                                 class="group flex items-center w-full px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 relative"
                                 :class="activeModule === item.id ? 
                                     'bg-blue-600 text-white shadow-lg transform scale-[1.02]' : 
@@ -266,8 +272,8 @@
         <header class="bg-white shadow-sm border-b border-gray-200">
             <div class="flex items-center justify-between h-16 px-4 lg:px-6">
                 <div class="flex items-center space-x-4">
-                    <button @click="isMobileMenuOpen = true" 
-                            class="text-gray-500 hover:text-gray-600 md:hidden">
+                    <button @click="toggleMobileMenu()" 
+                            class="text-gray-500 hover:text-gray-600 md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
                     <div>
