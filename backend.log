@@ -36,39 +36,28 @@
 ✅ Todas las tablas principales creadas correctamente
 ✅ Base de datos inicializada correctamente
 🚀 XentraStock v3.0 API Server
-📅 Iniciado: 6/11/2025, 11:06:08
+📅 Iniciado: 6/11/2025, 15:05:30
 🌐 Puerto: 3001
 🔗 URL: http://localhost:3001
 💻 Health Check: http://localhost:3001/health
 📊 API Base: http://localhost:3001/api
 🔄 Modo: development
 ✅ Servidor listo para recibir peticiones
-127.0.0.1 - - [06/Nov/2025:16:06:08 +0000] "GET /health HTTP/1.1" 200 123 "-" "curl/8.7.1"
-127.0.0.1 - - [06/Nov/2025:16:06:15 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:15 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:15 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:15 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/productos HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/movimientos?limit=10 HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/inventario HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/productos HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/movimientos?limit=10 HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/inventario HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/movimientos?limit=10 HTTP/1.1" 200 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/movimientos?limit=10 HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/productos HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/variantes HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/variantes HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/productos HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/ubicaciones HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/variantes HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/ubicaciones HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/ubicaciones HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:17 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
-127.0.0.1 - - [06/Nov/2025:16:06:24 +0000] "GET /api/proveedores HTTP/1.1" 200 1646 "-" "curl/8.7.1"
+127.0.0.1 - - [06/Nov/2025:20:05:31 +0000] "GET /health HTTP/1.1" 200 123 "-" "curl/8.7.1"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/productos HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/movimientos?limit=10 HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/inventario HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/movimientos?limit=10 HTTP/1.1" 200 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/productos HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/variantes HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/variantes HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/inventario HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/ubicaciones HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/ubicaciones HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:36 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:37 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:37 +0000] "OPTIONS /api/proveedores HTTP/1.1" 204 0 "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:37 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
+127.0.0.1 - - [06/Nov/2025:20:05:37 +0000] "GET /api/proveedores HTTP/1.1" 304 - "http://localhost:8080/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.105.1 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36"
