@@ -15,6 +15,10 @@ const validarProveedor = [
         .withMessage('El nombre es requerido')
         .isLength({ min: 2, max: 255 })
         .withMessage('El nombre debe tener entre 2 y 255 caracteres'),
+    body('actividad')
+        .optional()
+        .isLength({ max: 500 })
+        .withMessage('La actividad no puede exceder 500 caracteres'),
     body('contacto')
         .optional()
         .isLength({ max: 255 })
@@ -30,7 +34,11 @@ const validarProveedor = [
     body('direccion')
         .optional()
         .isLength({ max: 500 })
-        .withMessage('La dirección no puede exceder 500 caracteres')
+        .withMessage('La dirección no puede exceder 500 caracteres'),
+    body('activo')
+        .optional()
+        .isBoolean()
+        .withMessage('El campo activo debe ser verdadero o falso')
 ];
 
 // Rutas

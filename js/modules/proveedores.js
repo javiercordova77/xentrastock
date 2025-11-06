@@ -58,6 +58,7 @@ window.proveedoresModule = {
             const term = this.data.searchTerm.toLowerCase();
             this.data.filteredProviders = this.data.providers.filter(provider => 
                 provider.nombre?.toLowerCase().includes(term) ||
+                provider.actividad?.toLowerCase().includes(term) ||
                 provider.email?.toLowerCase().includes(term) ||
                 provider.telefono?.includes(term)
             );
@@ -72,7 +73,7 @@ window.proveedoresModule = {
         if (this.data.filteredProviders.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                         <i class="fas fa-truck text-4xl mb-4 text-gray-300"></i>
                         <p class="text-lg font-medium">No hay proveedores</p>
                         <p class="text-sm">Agrega tu primer proveedor para comenzar</p>
@@ -89,13 +90,18 @@ window.proveedoresModule = {
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900">${provider.nombre || 'Sin nombre'}</p>
-                                <p class="text-sm text-gray-500">${provider.codigo || 'Sin código'}</p>
+                                <p class="text-sm text-gray-500">${provider.actividad || 'Sin actividad'}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900">${provider.contacto || 'Sin contacto'}</td>
                     <td class="px-6 py-4 text-sm text-blue-600">${provider.email || 'Sin email'}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">${provider.telefono || 'Sin teléfono'}</td>
+                    <td class="px-6 py-4">
+                        <span class="${provider.activo !== 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                            ${provider.activo !== 0 ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
                             <button onclick="proveedoresModule.editProvider(${provider.id})" 
@@ -133,14 +139,16 @@ window.proveedoresModule = {
             // Fill form if editing
             if (provider) {
                 document.getElementById('provider-nombre').value = provider.nombre || '';
-                document.getElementById('provider-codigo').value = provider.codigo || '';
+                document.getElementById('provider-actividad').value = provider.actividad || '';
                 document.getElementById('provider-contacto').value = provider.contacto || '';
                 document.getElementById('provider-email').value = provider.email || '';
                 document.getElementById('provider-telefono').value = provider.telefono || '';
                 document.getElementById('provider-direccion').value = provider.direccion || '';
+                document.getElementById('provider-activo').checked = provider.activo !== 0;
                 document.getElementById('modal-title').textContent = 'Editar Proveedor';
             } else {
                 document.getElementById('provider-form').reset();
+                document.getElementById('provider-activo').checked = true; // Activo por defecto
                 document.getElementById('modal-title').textContent = 'Nuevo Proveedor';
             }
         }
@@ -162,11 +170,12 @@ window.proveedoresModule = {
         
         const providerData = {
             nombre: formData.get('nombre'),
-            codigo: formData.get('codigo'),
+            actividad: formData.get('actividad'),
             contacto: formData.get('contacto'),
             email: formData.get('email'),
             telefono: formData.get('telefono'),
-            direccion: formData.get('direccion')
+            direccion: formData.get('direccion'),
+            activo: formData.get('activo') === 'on' ? 1 : 0
         };
 
         try {
@@ -295,6 +304,9 @@ window.proveedoresModule = {
                                     Teléfono
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Estado
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Acciones
                                 </th>
                             </tr>
@@ -325,9 +337,10 @@ window.proveedoresModule = {
                             </div>
                             
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Código</label>
-                                <input type="text" name="codigo" id="provider-codigo"
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Actividad</label>
+                                <textarea name="actividad" id="provider-actividad" rows="2"
+                                          placeholder="Ej: Venta de insumos para el descanso"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                             </div>
                             
                             <div>
@@ -352,6 +365,15 @@ window.proveedoresModule = {
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
                                 <textarea name="direccion" id="provider-direccion" rows="2"
                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="activo" id="provider-activo" checked
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="ml-2 text-sm font-medium text-gray-700">Proveedor activo</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Los proveedores inactivos no aparecerán en los listados de selección</p>
                             </div>
                         </form>
                         

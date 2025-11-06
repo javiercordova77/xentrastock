@@ -18,9 +18,9 @@ class ProveedorService {
         }
 
         if (search) {
-            query += ' AND (nombre LIKE ? OR contacto LIKE ? OR email LIKE ?)';
+            query += ' AND (nombre LIKE ? OR actividad LIKE ? OR contacto LIKE ? OR email LIKE ?)';
             const searchParam = `%${search}%`;
-            params.push(searchParam, searchParam, searchParam);
+            params.push(searchParam, searchParam, searchParam, searchParam);
         }
 
         query += ' ORDER BY nombre ASC';
@@ -48,6 +48,7 @@ class ProveedorService {
         const db = database.getDb();
         const { 
             nombre, 
+            actividad = null,
             contacto = null, 
             telefono = null, 
             email = null, 
@@ -57,11 +58,11 @@ class ProveedorService {
         
         return new Promise((resolve, reject) => {
             const query = `
-                INSERT INTO proveedores (nombre, contacto, telefono, email, direccion, activo)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO proveedores (nombre, actividad, contacto, telefono, email, direccion, activo)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             `;
             
-            db.run(query, [nombre, contacto, telefono, email, direccion, activo], function(err) {
+            db.run(query, [nombre, actividad, contacto, telefono, email, direccion, activo], function(err) {
                 if (err) {
                     reject(err);
                 } else {
@@ -79,6 +80,7 @@ class ProveedorService {
         const db = database.getDb();
         const { 
             nombre, 
+            actividad = null,
             contacto = null, 
             telefono = null, 
             email = null, 
@@ -89,12 +91,12 @@ class ProveedorService {
         return new Promise((resolve, reject) => {
             const query = `
                 UPDATE proveedores 
-                SET nombre = ?, contacto = ?, telefono = ?, email = ?, direccion = ?, 
+                SET nombre = ?, actividad = ?, contacto = ?, telefono = ?, email = ?, direccion = ?, 
                     activo = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `;
             
-            db.run(query, [nombre, contacto, telefono, email, direccion, activo ? 1 : 0, id], function(err) {
+            db.run(query, [nombre, actividad, contacto, telefono, email, direccion, activo ? 1 : 0, id], function(err) {
                 if (err) {
                     reject(err);
                 } else if (this.changes === 0) {
