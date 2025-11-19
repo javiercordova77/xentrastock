@@ -1,5 +1,5 @@
 /**
- * Rutas de inventario para XentraStock v3.0 - ColchonesW
+ * Rutas de stock inventario para XentraStock v3.0
  */
 
 const express = require('express');

@@ -24,8 +24,8 @@ window.ubicacionesModule = {
                 this.renderTable();
             }
         } catch (error) {
-            console.error('Error loading locations:', error);
-            this.showMessage('Error al cargar las ubicaciones', 'error');
+            console.error('Error loading ubicaciones:', error);
+            window.app.showToast('error', 'Error', 'Error al cargar las ubicaciones');
         }
     },
 
@@ -141,8 +141,8 @@ window.ubicacionesModule = {
 
     getTypeLabel(tipo) {
         switch (tipo) {
-            case 'almacen': return 'Almacén';
-            case 'tienda': return 'Tienda';
+            case 'almacen': return 'Bodega';
+            case 'tienda': return 'Almacén';
             case 'showroom': return 'Showroom';
             default: return tipo || 'N/A';
         }
@@ -199,7 +199,7 @@ window.ubicacionesModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Ubicación actualizada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Ubicación actualizada exitosamente');
                 }
             } else {
                 const response = await window.app.apiRequest('/api/ubicaciones', {
@@ -209,15 +209,15 @@ window.ubicacionesModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Ubicación creada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Ubicación creada exitosamente');
                 }
             }
 
             this.closeModal();
             await this.loadLocations();
         } catch (error) {
-            console.error('Error saving location:', error);
-            this.showMessage('Error al guardar la ubicación', 'error');
+            console.error('Error saving ubicacion:', error);
+            window.app.showToast('error', 'Error', 'Error al guardar la ubicación');
         }
     },
 
@@ -246,21 +246,12 @@ window.ubicacionesModule = {
             });
 
             if (response.success) {
-                this.showMessage('Ubicación eliminada exitosamente', 'success');
-                await this.loadLocations();
+                window.app.showToast('success', 'Éxito', 'Ubicación eliminada exitosamente');
+                await this.loadUbicaciones();
             }
         } catch (error) {
-            console.error('Error deleting location:', error);
-            this.showMessage('Error al eliminar la ubicación', 'error');
-        }
-    },
-
-    showMessage(message, type = 'info') {
-        // Simple alert for now, could be enhanced with a toast component
-        if (type === 'error') {
-            alert(`Error: ${message}`);
-        } else {
-            alert(message);
+            console.error('Error deleting ubicacion:', error);
+            window.app.showToast('error', 'Error', 'Error al eliminar la ubicación');
         }
     },
 
@@ -336,7 +327,7 @@ window.ubicacionesModule = {
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
                         <input type="text" name="nombre" id="location-nombre" required
-                               placeholder="Ej: Bodega Central, Tienda Norte"
+                               placeholder="Ej: Bodega Central, Almacén Norte"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     
@@ -351,8 +342,8 @@ window.ubicacionesModule = {
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
                         <select name="tipo" id="location-tipo" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="almacen">Almacén</option>
-                            <option value="tienda">Tienda</option>
+                            <option value="almacen">Bodega</option>
+                            <option value="tienda">Almacén</option>
                             <option value="showroom">Showroom</option>
                         </select>
                     </div>

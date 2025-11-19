@@ -37,6 +37,12 @@ function appData() {
                 badge: null
             },
             {
+                id: 'ubicaciones',
+                name: 'Ubicaciones',
+                icon: 'fas fa-map-marker-alt',
+                badge: null
+            },
+            {
                 id: 'productos',
                 name: 'Productos',
                 icon: 'fas fa-box',
@@ -49,14 +55,8 @@ function appData() {
                 badge: null
             },
             {
-                id: 'ubicaciones',
-                name: 'Ubicaciones',
-                icon: 'fas fa-map-marker-alt',
-                badge: null
-            },
-            {
                 id: 'inventario',
-                name: 'Inventario',
+                name: 'Stock Inventario',
                 icon: 'fas fa-warehouse',
                 badge: null
             },
@@ -216,8 +216,8 @@ function appData() {
                         }
                         break;
                     case 'inventario':
-                        if (window.inventarioModule && window.inventarioModule.load) {
-                            await window.inventarioModule.load();
+                        if (window.stockInventarioModule && window.stockInventarioModule.load) {
+                            await window.stockInventarioModule.load();
                         } else {
                             this.showModuleUnavailable(moduleId);
                         }
@@ -284,8 +284,8 @@ function appData() {
         // Limpiar contenido de todos los módulos
         clearAllModuleContent() {
             const moduleIds = [
-                'dashboard', 'proveedores', 'categorias', 'productos', 
-                'variantes', 'ubicaciones', 'inventario', 'movimientos', 
+                'dashboard', 'proveedores', 'categorias', 'ubicaciones', 
+                'productos', 'variantes', 'inventario', 'movimientos', 
                 'transferencias', 'reportes', 'configuracion'
             ];
             

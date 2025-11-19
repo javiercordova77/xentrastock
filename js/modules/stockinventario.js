@@ -1,5 +1,5 @@
-// Módulo Inventario
-window.inventarioModule = {
+// Módulo Stock Inventario
+window.stockInventarioModule = {
     data: {
         items: [],
         filteredItems: [],
@@ -252,7 +252,7 @@ window.inventarioModule = {
                         <input type="checkbox" 
                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                value="${item.id}"
-                               onchange="inventarioModule.toggleItemSelection('${item.id}', this.checked)">
+                               onchange="stockInventarioModule.toggleItemSelection('${item.id}', this.checked)">
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
@@ -284,15 +284,15 @@ window.inventarioModule = {
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
-                            <button onclick="inventarioModule.editItem('${item.id}')" 
+                            <button onclick="stockInventarioModule.editItem('${item.id}')" 
                                     class="text-blue-600 hover:text-blue-700 p-1 rounded">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="inventarioModule.viewMovements('${item.id}')" 
+                            <button onclick="stockInventarioModule.viewMovements('${item.id}')" 
                                     class="text-green-600 hover:text-green-700 p-1 rounded">
                                 <i class="fas fa-history"></i>
                             </button>
-                            <button onclick="inventarioModule.adjustStock('${item.id}')" 
+                            <button onclick="stockInventarioModule.adjustStock('${item.id}')" 
                                     class="text-yellow-600 hover:text-yellow-700 p-1 rounded">
                                 <i class="fas fa-adjust"></i>
                             </button>
@@ -323,7 +323,7 @@ window.inventarioModule = {
 
         // Previous button
         pages.push(`
-            <button onclick="inventarioModule.goToPage(${currentPage - 1})"
+            <button onclick="stockInventarioModule.goToPage(${currentPage - 1})"
                     class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}"
                     ${currentPage === 1 ? 'disabled' : ''}>
                 <i class="fas fa-chevron-left"></i>
@@ -333,7 +333,7 @@ window.inventarioModule = {
         // Page numbers
         for (let i = startPage; i <= endPage; i++) {
             pages.push(`
-                <button onclick="inventarioModule.goToPage(${i})"
+                <button onclick="stockInventarioModule.goToPage(${i})"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-medium border ${
                             i === currentPage 
                                 ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' 
@@ -346,7 +346,7 @@ window.inventarioModule = {
 
         // Next button
         pages.push(`
-            <button onclick="inventarioModule.goToPage(${currentPage + 1})"
+            <button onclick="stockInventarioModule.goToPage(${currentPage + 1})"
                     class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}"
                     ${currentPage === totalPages ? 'disabled' : ''}>
                 <i class="fas fa-chevron-right"></i>
@@ -608,7 +608,7 @@ window.inventarioModule = {
                         <span class="text-sm font-medium text-blue-900">
                             <span id="selected-count">0</span> elementos seleccionados
                         </span>
-                        <button onclick="inventarioModule.clearSelection()" 
+                        <button onclick="stockInventarioModule.clearSelection()" 
                                 class="text-sm text-blue-600 hover:text-blue-700">
                             Deseleccionar todo
                         </button>
@@ -650,7 +650,7 @@ window.inventarioModule = {
                                     <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('nombre')">
+                                    onclick="stockInventarioModule.sortBy('nombre')">
                                     <div class="flex items-center space-x-1">
                                         <span>Producto</span>
                                         <i class="fas fa-sort text-gray-400"></i>
@@ -660,28 +660,28 @@ window.inventarioModule = {
                                     Variante
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('categoria')">
+                                    onclick="stockInventarioModule.sortBy('categoria')">
                                     <div class="flex items-center space-x-1">
                                         <span>Categoría</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('ubicacion')">
+                                    onclick="stockInventarioModule.sortBy('ubicacion')">
                                     <div class="flex items-center space-x-1">
                                         <span>Ubicación</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('cantidad')">
+                                    onclick="stockInventarioModule.sortBy('cantidad')">
                                     <div class="flex items-center space-x-1">
                                         <span>Stock</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('precio')">
+                                    onclick="stockInventarioModule.sortBy('precio')">
                                     <div class="flex items-center space-x-1">
                                         <span>Precio</span>
                                         <i class="fas fa-sort text-gray-400"></i>

@@ -1,14 +1,14 @@
 import { apiClient } from './apiClient';
 
 const ENDPOINTS = {
-  INVENTARIO_COLCHONESW: '/api/inventario-colchonesw'
+  INVENTARIO: '/api/inventario'
 };
 
 export const inventarioService = {
   // Obtener todo el inventario
   getAll: async () => {
     try {
-      const response = await apiClient.get(ENDPOINTS.INVENTARIO_COLCHONESW);
+      const response = await apiClient.get(ENDPOINTS.INVENTARIO);
       
       // Transformar la respuesta de la API al formato que espera el componente
       const inventario = response.data.map(item => ({

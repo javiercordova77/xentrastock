@@ -1,5 +1,5 @@
 /**
- * Controlador para Variantes - ColchonesW
+ * Controlador para Variantes - XentraStock
  * Gestiona las variantes de productos con medidas, precios y stock por ubicación
  */
 

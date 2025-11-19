@@ -25,7 +25,7 @@ window.categoriasModule = {
             }
         } catch (error) {
             console.error('Error loading categories:', error);
-            this.showMessage('Error al cargar las categorías', 'error');
+            window.app.showToast('error', 'Error', 'Error al cargar las categorías');
         }
     },
 
@@ -163,7 +163,7 @@ window.categoriasModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Categoría actualizada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Categoría actualizada exitosamente');
                 }
             } else {
                 const response = await window.app.apiRequest('/api/categorias', {
@@ -173,7 +173,7 @@ window.categoriasModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Categoría creada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Categoría creada exitosamente');
                 }
             }
 
@@ -181,7 +181,7 @@ window.categoriasModule = {
             await this.loadCategories();
         } catch (error) {
             console.error('Error saving category:', error);
-            this.showMessage('Error al guardar la categoría', 'error');
+            window.app.showToast('error', 'Error', 'Error al guardar la categoría');
         }
     },
 
@@ -210,21 +210,12 @@ window.categoriasModule = {
             });
 
             if (response.success) {
-                this.showMessage('Categoría eliminada exitosamente', 'success');
+                window.app.showToast('success', 'Éxito', 'Categoría eliminada exitosamente');
                 await this.loadCategories();
             }
         } catch (error) {
             console.error('Error deleting category:', error);
-            this.showMessage('Error al eliminar la categoría', 'error');
-        }
-    },
-
-    showMessage(message, type = 'info') {
-        // Simple alert for now, could be enhanced with a toast component
-        if (type === 'error') {
-            alert(`Error: ${message}`);
-        } else {
-            alert(message);
+            window.app.showToast('error', 'Error', 'Error al eliminar la categoría');
         }
     },
 

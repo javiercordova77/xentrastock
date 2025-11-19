@@ -27,7 +27,7 @@ window.variantesModule = {
             }
         } catch (error) {
             console.error('Error loading variants:', error);
-            this.showMessage('Error al cargar las variantes', 'error');
+            window.app.showToast('error', 'Error', 'Error al cargar las variantes');
         }
     },
 
@@ -44,13 +44,80 @@ window.variantesModule = {
     },
 
     updateProductSelect() {
-        const select = document.getElementById('variant-producto');
-        if (select) {
-            select.innerHTML = '<option value="">Selecciona un producto</option>' +
-                this.data.products
-                    .filter(prod => prod.activo)
-                    .map(prod => `<option value="${prod.id}">${prod.descripcion}</option>`)
-                    .join('');
+        // Ya no necesitamos este método con el nuevo sistema de búsqueda
+        // Pero lo mantenemos para compatibilidad
+    },
+
+    setupProductSearch() {
+        const searchInput = document.getElementById('variant-producto-search');
+        const dropdown = document.getElementById('variant-producto-dropdown');
+        const hiddenInput = document.getElementById('variant-producto');
+
+        if (!searchInput || !dropdown) return;
+
+        // Mostrar todos los productos al hacer foco
+        searchInput.addEventListener('focus', () => {
+            this.showProductDropdown('');
+        });
+
+        // Filtrar productos mientras se escribe
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value;
+            this.showProductDropdown(searchTerm);
+        });
+
+        // Ocultar dropdown al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    },
+
+    showProductDropdown(searchTerm = '') {
+        const dropdown = document.getElementById('variant-producto-dropdown');
+        if (!dropdown) return;
+
+        const filteredProducts = this.data.products
+            .filter(prod => prod.activo && 
+                (searchTerm === '' || prod.descripcion.toLowerCase().includes(searchTerm.toLowerCase())))
+            .slice(0, 10); // Limitar a 10 resultados para mejor rendimiento
+
+        if (filteredProducts.length === 0) {
+            dropdown.innerHTML = `
+                <div class="px-3 py-2 text-gray-500 text-sm">
+                    ${searchTerm ? 'No se encontraron productos' : 'No hay productos disponibles'}
+                </div>
+            `;
+        } else {
+            dropdown.innerHTML = filteredProducts
+                .map(prod => `
+                    <div class="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0" 
+                         onclick="variantesModule.selectProduct(${prod.id}, '${prod.descripcion.replace(/'/g, '\\\'')}')" >
+                        <div class="font-medium text-gray-900">${prod.descripcion}</div>
+                        <div class="text-xs text-gray-500">
+                            ${prod.categoria_nombre || 'Sin categoría'} • ${prod.proveedor_nombre || 'Sin proveedor'}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        dropdown.classList.remove('hidden');
+    },
+
+    selectProduct(productId, productName) {
+        const searchInput = document.getElementById('variant-producto-search');
+        const hiddenInput = document.getElementById('variant-producto');
+        const dropdown = document.getElementById('variant-producto-dropdown');
+
+        if (searchInput && hiddenInput && dropdown) {
+            searchInput.value = productName;
+            hiddenInput.value = productId;
+            dropdown.classList.add('hidden');
+            
+            // Validar que el producto se seleccionó
+            searchInput.classList.remove('border-red-300');
+            searchInput.classList.add('border-green-300');
         }
     },
 
@@ -151,13 +218,27 @@ window.variantesModule = {
         if (modal) {
             modal.classList.remove('hidden');
             
-            // Update product select
-            this.updateProductSelect();
+            // Configurar el sistema de búsqueda de productos
+            setTimeout(() => {
+                this.setupProductSearch();
+            }, 100);
             
             // Fill form if editing
             if (variant) {
                 document.getElementById('variant-codigo').value = variant.codigo_variante || '';
-                document.getElementById('variant-producto').value = variant.id_producto || '';
+                
+                // Para el producto en modo edición
+                const productSearchInput = document.getElementById('variant-producto-search');
+                const hiddenProductInput = document.getElementById('variant-producto');
+                if (productSearchInput && hiddenProductInput && variant.id_producto) {
+                    hiddenProductInput.value = variant.id_producto;
+                    const product = this.data.products.find(p => p.id == variant.id_producto);
+                    if (product) {
+                        productSearchInput.value = product.descripcion;
+                        productSearchInput.classList.add('border-green-300');
+                    }
+                }
+                
                 document.getElementById('variant-medida').value = variant.medida || '';
                 document.getElementById('variant-precio-venta').value = variant.precio_venta || '';
                 document.getElementById('variant-precio-compra').value = variant.precio_compra || '';
@@ -165,6 +246,16 @@ window.variantesModule = {
                 document.getElementById('modal-title').textContent = 'Editar Variante';
             } else {
                 document.getElementById('variant-form').reset();
+                
+                // Limpiar búsqueda de producto
+                const productSearchInput = document.getElementById('variant-producto-search');
+                const hiddenProductInput = document.getElementById('variant-producto');
+                if (productSearchInput && hiddenProductInput) {
+                    productSearchInput.value = '';
+                    productSearchInput.classList.remove('border-green-300', 'border-red-300');
+                    hiddenProductInput.value = '';
+                }
+                
                 document.getElementById('variant-activo').checked = true; // Por defecto activo
                 document.getElementById('modal-title').textContent = 'Nueva Variante';
             }
@@ -173,28 +264,50 @@ window.variantesModule = {
 
     closeModal() {
         const modal = document.getElementById('variant-modal');
+        const dropdown = document.getElementById('variant-producto-dropdown');
+        
         if (modal) {
             modal.classList.add('hidden');
             this.data.editingVariant = null;
+        }
+        
+        // Ocultar dropdown si está visible
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+        
+        // Limpiar estilos de validación
+        const productSearchInput = document.getElementById('variant-producto-search');
+        if (productSearchInput) {
+            productSearchInput.classList.remove('border-green-300', 'border-red-300');
         }
     },
 
     async saveVariant() {
         const form = document.getElementById('variant-form');
-        const formData = new FormData(form);
+        const hiddenProductInput = document.getElementById('variant-producto');
+        const productSearchInput = document.getElementById('variant-producto-search');
         
         const variantData = {
-            codigo_variante: formData.get('codigo_variante'),
-            id_producto: parseInt(formData.get('id_producto')),
-            medida: formData.get('medida'),
-            precio_venta: parseFloat(formData.get('precio_venta')) || 0,
-            precio_compra: parseFloat(formData.get('precio_compra')) || 0,
-            activo: formData.get('activo') ? 1 : 0
+            codigo_variante: document.getElementById('variant-codigo').value,
+            id_producto: parseInt(hiddenProductInput.value),
+            medida: document.getElementById('variant-medida').value,
+            precio_venta: parseFloat(document.getElementById('variant-precio-venta').value) || 0,
+            precio_compra: parseFloat(document.getElementById('variant-precio-compra').value) || 0,
+            activo: document.getElementById('variant-activo').checked ? 1 : 0
         };
 
         // Validaciones
-        if (!variantData.codigo_variante || !variantData.id_producto) {
-            this.showMessage('Por favor completa todos los campos obligatorios', 'error');
+        if (!variantData.codigo_variante) {
+            window.app.showToast('error', 'Error', 'Por favor ingresa el código de la variante');
+            document.getElementById('variant-codigo').focus();
+            return;
+        }
+
+        if (!variantData.id_producto || isNaN(variantData.id_producto)) {
+            window.app.showToast('error', 'Error', 'Por favor selecciona un producto válido');
+            productSearchInput.classList.add('border-red-300');
+            productSearchInput.focus();
             return;
         }
 
@@ -207,7 +320,7 @@ window.variantesModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Variante actualizada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Variante actualizada exitosamente');
                 }
             } else {
                 const response = await window.app.apiRequest('/api/variantes', {
@@ -217,7 +330,7 @@ window.variantesModule = {
                 });
                 
                 if (response.success) {
-                    this.showMessage('Variante creada exitosamente', 'success');
+                    window.app.showToast('success', 'Éxito', 'Variante creada exitosamente');
                 }
             }
 
@@ -225,7 +338,7 @@ window.variantesModule = {
             await this.loadVariants();
         } catch (error) {
             console.error('Error saving variant:', error);
-            this.showMessage('Error al guardar la variante', 'error');
+            window.app.showToast('error', 'Error', 'Error al guardar la variante');
         }
     },
 
@@ -254,21 +367,12 @@ window.variantesModule = {
             });
 
             if (response.success) {
-                this.showMessage('Variante eliminada exitosamente', 'success');
+                window.app.showToast('success', 'Éxito', 'Variante eliminada exitosamente');
                 await this.loadVariants();
             }
         } catch (error) {
             console.error('Error deleting variant:', error);
-            this.showMessage('Error al eliminar la variante', 'error');
-        }
-    },
-
-    showMessage(message, type = 'info') {
-        // Simple alert for now, could be enhanced with a toast component
-        if (type === 'error') {
-            alert(`Error: ${message}`);
-        } else {
-            alert(message);
+            window.app.showToast('error', 'Error', 'Error al eliminar la variante');
         }
     },
 
@@ -356,10 +460,23 @@ window.variantesModule = {
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Producto *</label>
-                        <select name="id_producto" id="variant-producto" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Selecciona un producto</option>
-                        </select>
+                        <div class="relative">
+                            <input type="text" id="variant-producto-search" 
+                                   placeholder="Buscar producto por nombre..."
+                                   autocomplete="off"
+                                   class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
+                            <input type="hidden" name="id_producto" id="variant-producto" required>
+                            
+                            <!-- Dropdown con resultados de búsqueda -->
+                            <div id="variant-producto-dropdown" 
+                                 class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto hidden">
+                                <!-- Los productos filtrados aparecerán aquí -->
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Escribe para buscar o haz clic para ver todos los productos</p>
                     </div>
                     
                     <div>

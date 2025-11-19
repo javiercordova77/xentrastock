@@ -302,24 +302,31 @@
              isMobile ? '' : (isSidebarCollapsed ? 'content-collapsed' : 'content-expanded')
          ]">
         <!-- Top Bar -->
-        <header class="bg-white shadow-sm border-b border-gray-200">
-            <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+        <header class="relative shadow-sm border-b border-gray-200 overflow-hidden"
+                style="background-image: url('assets/images/backgrounds/backtop2.jpg'); 
+                       background-size: cover; 
+                       background-position: center; 
+                       background-repeat: no-repeat;">
+            <!-- Overlay para mejorar legibilidad del texto -->
+            <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+            
+            <div class="relative z-10 flex items-center justify-between h-16 px-4 lg:px-6">
                 <div class="flex items-center space-x-4">
                     <button @click="toggleMobileMenu()" 
-                            class="text-gray-500 hover:text-gray-600 md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                            class="text-white hover:text-gray-200 md:hidden p-2 rounded-lg hover:bg-black hover:bg-opacity-20 transition-colors">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
                 </div>
                 
                 <div class="flex items-center space-x-4">
                     <!-- Notifications -->
-                    <button class="relative p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <button class="relative p-2 text-white hover:text-gray-200 hover:bg-black hover:bg-opacity-20 rounded-lg transition-colors">
                         <i class="fas fa-bell text-lg"></i>
                         <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                     </button>
                     
                     <!-- Settings -->
-                    <button class="p-2 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                    <button class="p-2 text-white hover:text-gray-200 hover:bg-black hover:bg-opacity-20 rounded-lg transition-colors">
                         <i class="fas fa-cog text-lg"></i>
                     </button>
                 </div>
@@ -498,7 +505,7 @@
     <script src="js/modules/productos.js"></script>
     <script src="js/modules/variantes.js"></script>
     <script src="js/modules/ubicaciones.js"></script>
-    <script src="js/modules/inventario.js"></script>
+    <script src="js/modules/stockinventario.js"></script>
     <script src="js/modules/movimientos.js"></script>
     <script src="js/modules/transferencias.js"></script>
     <script src="js/modules/reportes.js"></script>

@@ -9,10 +9,10 @@ const router = express.Router();
 const proveedoresRoutes = require('./proveedores');
 const categoriasRoutes = require('./categorias');
 const ubicacionesRoutes = require('./ubicaciones');
-const productosRoutes = require('./productos-colchonesw');
-const variantesRoutes = require('./variantes-colchonesw');
+const productosRoutes = require('./productos');
+const variantesRoutes = require('./variantes');
 const coloresVariantesRoutes = require('./colores-variantes');
-const inventarioRoutes = require('./inventario-colchonesw');
+const inventarioRoutes = require('./stockinventario');
 const inventarioLegacyRoutes = require('./inventario-legacy');
 const movimientosRoutes = require('./movimientos');
 const transferenciasRoutes = require('./transferencias');
@@ -27,7 +27,6 @@ router.use('/productos', productosRoutes);
 router.use('/variantes', variantesRoutes);
 router.use('/colores-variantes', coloresVariantesRoutes);
 router.use('/inventario', inventarioRoutes);
-router.use('/inventario-colchonesw', inventarioRoutes);
 router.use('/inventario-legacy', inventarioLegacyRoutes);
 router.use('/movimientos', movimientosRoutes);
 router.use('/transferencias', transferenciasRoutes);
@@ -48,7 +47,6 @@ router.get('/', (req, res) => {
             variantes: '/api/variantes',
             colores_variantes: '/api/colores-variantes',
             inventario: '/api/inventario',
-            inventario_colchonesw: '/api/inventario-colchonesw',
             movimientos: '/api/movimientos',
             transferencias: '/api/transferencias',
             reportes: '/api/reportes',

@@ -7,7 +7,7 @@ import Categorias from './pages/Categorias';
 import Ubicaciones from './pages/Ubicaciones';
 import Productos from './pages/Productos';
 import Variantes from './pages/Variantes';
-import Inventario from './pages/Inventario';
+import StockInventario from './pages/StockInventario';
 import Movimientos from './pages/Movimientos';
 import Transferencias from './pages/Transferencias';
 import Reportes from './pages/Reportes';
@@ -23,7 +23,7 @@ function App() {
           <Route path="/ubicaciones" element={<Ubicaciones />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/variantes" element={<Variantes />} />
-          <Route path="/inventario" element={<Inventario />} />
+          <Route path="/inventario" element={<StockInventario />} />
           <Route path="/movimientos" element={<Movimientos />} />
           <Route path="/transferencias" element={<Transferencias />} />
           <Route path="/reportes" element={<Reportes />} />

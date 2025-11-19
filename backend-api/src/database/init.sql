@@ -1,5 +1,5 @@
 -- ------------------------------------------------------------
--- XentraStock v3.0 - Esquema ColchonesW
+-- XentraStock v3.0 - Esquema Principal
 -- Estructura de base de datos para sistema de inventarios
 -- especializado en productos con variantes (colchones/almohadas)
 -- ------------------------------------------------------------
@@ -208,7 +208,7 @@ INNER JOIN categorias c ON c.id = p.id_categoria
 INNER JOIN proveedores pr ON pr.id = p.id_proveedor;
 
 -- ------------------------------------------------------------
--- Datos de ejemplo para ColchonesW
+-- Datos de ejemplo para XentraStock
 -- ------------------------------------------------------------
 
 -- Proveedores
