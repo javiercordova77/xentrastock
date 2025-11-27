@@ -89,6 +89,7 @@ export const movimientosService = {
   create: (data) => apiClient.post('/movimientos', data),
   getByVariante: (varianteId) => apiClient.get(`/movimientos/variante/${varianteId}`),
   getByTipo: (tipo) => apiClient.get(`/movimientos/tipo/${tipo}`),
+  getMotivos: (tipo) => apiClient.get(`/movimientos/motivos/${tipo}`),
 };
 
 // Servicios para Transferencias

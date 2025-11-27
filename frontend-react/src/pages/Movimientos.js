@@ -22,6 +22,7 @@ function Movimientos() {
     fecha_fin: '',
     motivo: ''
   });
+  const [motivosDisponibles, setMotivosDisponibles] = useState([]);
   const [formData, setFormData] = useState({
     tipo: 'entrada',
     id_producto: '',
@@ -30,6 +31,8 @@ function Movimientos() {
     cantidad: '',
     precio_unitario: '',
     motivo: '',
+    referencia: '',
+    usuario: 'Juan',
     observaciones: ''
   });
 
@@ -107,6 +110,26 @@ function Movimientos() {
       setFormData(prev => ({ ...prev, id_variante: '' }));
     }
   }, [formData.id_producto, formData.id_variante, variantes]);
+
+  // Cargar motivos cuando cambia el tipo de movimiento
+  useEffect(() => {
+    if (formData.tipo) {
+      cargarMotivos(formData.tipo);
+    }
+  }, [formData.tipo]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cargarMotivos = async (tipo) => {
+    try {
+      const response = await movimientosService.getMotivos(tipo);
+      if (response.data.success) {
+        setMotivosDisponibles(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error cargando motivos:', error);
+      // Fallback a motivos estáticos si la API falla
+      setMotivosDisponibles(motivosComunes[tipo] || []);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -763,7 +786,7 @@ function Movimientos() {
                           onChange={(e) => setFormData(prev => ({ ...prev, motivo: e.target.value }))}
                         >
                           <option value="">Seleccionar motivo...</option>
-                          {(motivosComunes[formData.tipo] || []).map(motivo => (
+                          {(motivosDisponibles.length > 0 ? motivosDisponibles : motivosComunes[formData.tipo] || []).map(motivo => (
                             <option key={motivo} value={motivo}>{motivo}</option>
                           ))}
                           <option value="otro">Otro motivo...</option>
@@ -778,6 +801,36 @@ function Movimientos() {
                             onChange={(e) => setFormData(prev => ({ ...prev, motivo: e.target.value }))}
                           />
                         )}
+                      </div>
+                      
+                      {/* Responsable y Referencia */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Responsable *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            className="form-input"
+                            value={formData.usuario}
+                            onChange={(e) => setFormData(prev => ({ ...prev, usuario: e.target.value }))}
+                            placeholder="Nombre del responsable"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Referencia
+                          </label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={formData.referencia}
+                            onChange={(e) => setFormData(prev => ({ ...prev, referencia: e.target.value }))}
+                            placeholder="Número de factura, orden, etc."
+                          />
+                        </div>
                       </div>
                       
                       {/* Observaciones */}

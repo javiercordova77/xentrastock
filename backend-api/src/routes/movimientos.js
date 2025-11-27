@@ -4,6 +4,31 @@ const { body, validationResult } = require('express-validator');
 const database = require('../config/database');
 const { asyncHandler } = require('../middleware/errorHandler');
 
+// Motivos válidos para cada tipo de movimiento
+const MOTIVOS_MOVIMIENTOS = {
+	entrada: ['Inventario Inicial', 'Compra', 'Devolución', 'Ajuste'],
+	salida: ['Venta', 'Devolución', 'Ajuste'],
+	ajuste: ['Ajuste Manual', 'Corrección Inventario', 'Merma', 'Daño']
+};
+
+// Endpoint para obtener motivos válidos
+router.get('/motivos/:tipo', (req, res) => {
+	const { tipo } = req.params;
+	const motivos = MOTIVOS_MOVIMIENTOS[tipo];
+	
+	if (!motivos) {
+		return res.status(400).json({ 
+			success: false, 
+			message: 'Tipo de movimiento inválido' 
+		});
+	}
+	
+	res.json({ 
+		success: true, 
+		data: motivos 
+	});
+});
+
 // Listar movimientos con filtros
 router.get('/', asyncHandler(async (req, res) => {
 	const db = database.getDb();
