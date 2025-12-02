@@ -40,10 +40,10 @@ window.stockInventarioModule = {
         try {
             // Cargar datos en paralelo
             const [inventory, categories, locations, providers] = await Promise.all([
-                window.app.apiRequest('/api/inventario'),
-                window.app.apiRequest('/api/categorias'),
-                window.app.apiRequest('/api/ubicaciones'),
-                window.app.apiRequest('/api/proveedores')
+                fetch('http://localhost:3001/api/stockinventario').then(r => r.json()),
+                fetch('http://localhost:3001/api/categorias').then(r => r.json()),
+                fetch('http://localhost:3001/api/ubicaciones').then(r => r.json()),
+                fetch('http://localhost:3001/api/proveedores').then(r => r.json())
             ]);
 
             this.data.items = inventory?.data || [];
@@ -164,32 +164,36 @@ window.stockInventarioModule = {
         if (this.data.filters.search) {
             const search = this.data.filters.search.toLowerCase();
             filtered = filtered.filter(item => 
-                (item.nombre || '').toLowerCase().includes(search) ||
-                (item.codigo || '').toLowerCase().includes(search) ||
-                (item.variante || '').toLowerCase().includes(search) ||
-                (item.categoria || '').toLowerCase().includes(search) ||
-                (item.proveedor || '').toLowerCase().includes(search)
+                (item.producto_descripcion || '').toLowerCase().includes(search) ||
+                (item.codigo_variante || '').toLowerCase().includes(search) ||
+                (item.medida || '').toLowerCase().includes(search) ||
+                (item.categoria_nombre || '').toLowerCase().includes(search) ||
+                (item.proveedor_nombre || '').toLowerCase().includes(search) ||
+                (item.material || '').toLowerCase().includes(search)
             );
         }
 
         // Category filter
         if (this.data.filters.category) {
-            filtered = filtered.filter(item => item.categoria_id == this.data.filters.category);
+            filtered = filtered.filter(item => item.categoria_nombre === this.data.categories.find(c => c.id == this.data.filters.category)?.nombre);
         }
 
-        // Location filter
+        // Location filter - buscar en todas las ubicaciones del item
         if (this.data.filters.location) {
-            filtered = filtered.filter(item => item.ubicacion_id == this.data.filters.location);
+            const locationName = this.data.locations.find(l => l.id == this.data.filters.location)?.nombre;
+            filtered = filtered.filter(item => 
+                item.ubicaciones && item.ubicaciones.some(u => u.ubicacion_nombre === locationName)
+            );
         }
 
         // Provider filter
         if (this.data.filters.provider) {
-            filtered = filtered.filter(item => item.proveedor_id == this.data.filters.provider);
+            filtered = filtered.filter(item => item.proveedor_nombre === this.data.providers.find(p => p.id == this.data.filters.provider)?.nombre);
         }
 
         // Low stock filter
         if (this.data.filters.lowStock) {
-            filtered = filtered.filter(item => (item.cantidad || 0) < 10);
+            filtered = filtered.filter(item => (item.stock_total || 0) < 10);
         }
 
         this.data.filteredItems = filtered;
@@ -246,13 +250,23 @@ window.stockInventarioModule = {
                 </tr>
             `;
         } else {
-            tbody.innerHTML = pageItems.map(item => `
+            tbody.innerHTML = pageItems.map(item => {
+                const stockStatus = (item.stock_total || 0) < 10 ? 'text-red-600' : 'text-gray-900';
+                const stockIcon = (item.stock_total || 0) < 10 ? '<i class="fas fa-exclamation-triangle text-red-500 ml-1 text-xs"></i>' : '';
+                const totalValue = (item.stock_total || 0) * (item.precio_venta || 0);
+                
+                // Mostrar las ubicaciones donde tiene stock
+                const ubicacionesTexto = item.ubicaciones && item.ubicaciones.length > 0 
+                    ? item.ubicaciones.map(u => `${u.ubicacion_nombre} (${u.stock_disponible})`).join(', ')
+                    : 'Sin ubicaciones';
+                    
+                return `
                 <tr class="hover:bg-gray-50 border-b border-gray-100">
                     <td class="px-6 py-4">
                         <input type="checkbox" 
                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                               value="${item.id}"
-                               onchange="stockInventarioModule.toggleItemSelection('${item.id}', this.checked)">
+                               value="${item.variante_id}"
+                               onchange="stockInventarioModule.toggleItemSelection('${item.variante_id}', this.checked)">
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
@@ -260,46 +274,55 @@ window.stockInventarioModule = {
                                 <i class="fas fa-box text-gray-400"></i>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-900">${item.nombre || 'Sin nombre'}</p>
-                                <p class="text-sm text-gray-500">${item.codigo || 'Sin código'}</p>
+                                <p class="font-medium text-gray-900">${item.producto_descripcion || 'Sin nombre'}</p>
+                                <p class="text-sm text-gray-500">${item.material || 'Sin material'}</p>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            ${item.variante || 'Sin variante'}
+                            ${item.codigo_variante || 'Sin código'} - ${item.medida || 'Sin medida'}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.categoria || 'Sin categoría'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.ubicacion || 'Sin ubicación'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${item.categoria_nombre || 'Sin categoría'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900" title="${ubicacionesTexto}">
+                        ${item.ubicaciones && item.ubicaciones.length > 0 
+                            ? `${item.ubicaciones.length} ubicación${item.ubicaciones.length > 1 ? 'es' : ''}` 
+                            : 'Sin stock'}
+                    </td>
                     <td class="px-6 py-4">
-                        <span class="text-lg font-semibold ${(item.cantidad || 0) < 10 ? 'text-red-600' : 'text-gray-900'}">
-                            ${window.utils.formatNumber(item.cantidad || 0)}
+                        <span class="text-lg font-semibold ${stockStatus}">
+                            ${item.stock_total || 0} u.
                         </span>
-                        ${(item.cantidad || 0) < 10 ? '<i class="fas fa-exclamation-triangle text-red-500 ml-1 text-xs"></i>' : ''}
+                        ${stockIcon}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${window.utils.formatCurrency(item.precio || 0)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${window.utils.formatCurrency(item.precio_venta || 0)}</td>
                     <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                        ${window.utils.formatCurrency((item.cantidad || 0) * (item.precio || 0))}
+                        ${window.utils.formatCurrency(totalValue)}
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
-                            <button onclick="stockInventarioModule.editItem('${item.id}')" 
-                                    class="text-blue-600 hover:text-blue-700 p-1 rounded">
+                            <button onclick="stockInventarioModule.viewStockDetail('${item.variante_id}')" 
+                                    class="text-indigo-600 hover:text-indigo-700 p-1 rounded" title="Ver stock por ubicación">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="stockInventarioModule.editItem('${item.variante_id}')" 
+                                    class="text-blue-600 hover:text-blue-700 p-1 rounded" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="stockInventarioModule.viewMovements('${item.id}')" 
-                                    class="text-green-600 hover:text-green-700 p-1 rounded">
+                            <button onclick="stockInventarioModule.viewMovements('${item.variante_id}')" 
+                                    class="text-green-600 hover:text-green-700 p-1 rounded" title="Ver historial">
                                 <i class="fas fa-history"></i>
                             </button>
-                            <button onclick="stockInventarioModule.adjustStock('${item.id}')" 
-                                    class="text-yellow-600 hover:text-yellow-700 p-1 rounded">
+                            <button onclick="stockInventarioModule.adjustStock('${item.variante_id}')" 
+                                    class="text-yellow-600 hover:text-yellow-700 p-1 rounded" title="Ajustar stock">
                                 <i class="fas fa-adjust"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         this.updatePagination();
@@ -373,19 +396,19 @@ window.stockInventarioModule = {
         const lowStockCount = document.getElementById('low-stock-summary');
 
         if (totalItems) {
-            totalItems.textContent = window.utils.formatNumber(this.data.filteredItems.length);
+            totalItems.textContent = this.data.filteredItems.length;
         }
 
         if (totalValue) {
             const value = this.data.filteredItems.reduce((sum, item) => 
-                sum + ((item.cantidad || 0) * (item.precio || 0)), 0
+                sum + ((item.stock_total || 0) * (item.precio_venta || 0)), 0
             );
             totalValue.textContent = window.utils.formatCurrency(value);
         }
 
         if (lowStockCount) {
-            const lowStock = this.data.filteredItems.filter(item => (item.cantidad || 0) < 10).length;
-            lowStockCount.textContent = window.utils.formatNumber(lowStock);
+            const lowStock = this.data.filteredItems.filter(item => (item.stock_total || 0) < 10).length;
+            lowStockCount.textContent = lowStock;
         }
     },
 
@@ -512,6 +535,104 @@ window.stockInventarioModule = {
         checkboxes.forEach(checkbox => checkbox.checked = false);
         
         this.updateBulkActions();
+    },
+
+    // Método para ver detalle de stock por ubicación
+    viewStockDetail(varianteId) {
+        // Buscar el item en los datos actuales
+        const item = this.data.filteredItems.find(i => i.variante_id == varianteId) || 
+                     this.data.items.find(i => i.variante_id == varianteId);
+        
+        if (!item) {
+            window.app.showToast('error', 'Error', 'No se encontró la variante');
+            return;
+        }
+        
+        // Llenar información de la variante
+        const variantInfo = document.getElementById('variant-info');
+        if (variantInfo) {
+            variantInfo.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">${item.producto_descripcion}</h4>
+                        <p class="text-sm text-gray-600">Código: ${item.codigo_variante}</p>
+                        <p class="text-sm text-gray-600">Medida: ${item.medida}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-gray-900">Stock Total: ${item.stock_total || 0} u.</p>
+                        <p class="text-sm text-gray-600">Precio: ${window.utils.formatCurrency(item.precio_venta || 0)}</p>
+                        <p class="text-sm font-medium text-gray-900">Valor Total: ${window.utils.formatCurrency((item.stock_total || 0) * (item.precio_venta || 0))}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Llenar tabla de ubicaciones
+        const tbody = document.getElementById('stock-detail-tbody');
+        if (tbody) {
+            if (item.ubicaciones && item.ubicaciones.length > 0) {
+                tbody.innerHTML = item.ubicaciones.map(ubicacion => {
+                    const estadoClass = ubicacion.estado_stock === 'bajo' ? 'text-red-600' : 
+                                       ubicacion.estado_stock === 'agotado' ? 'text-gray-400' : 'text-green-600';
+                    const estadoTexto = ubicacion.estado_stock === 'bajo' ? 'Stock Bajo' : 
+                                       ubicacion.estado_stock === 'agotado' ? 'Agotado' : 'Normal';
+                    const estadoIcon = ubicacion.estado_stock === 'bajo' ? 'fas fa-exclamation-triangle' : 
+                                      ubicacion.estado_stock === 'agotado' ? 'fas fa-times-circle' : 'fas fa-check-circle';
+                    
+                    return `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-900">${ubicacion.ubicacion_nombre}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    ${ubicacion.ubicacion_tipo}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-lg font-semibold ${ubicacion.stock_disponible < ubicacion.stock_minimo ? 'text-red-600' : 'text-gray-900'}">
+                                    ${ubicacion.stock_disponible} u.
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${ubicacion.stock_minimo} u.
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${estadoClass.replace('text-', 'bg-').replace('600', '100')} ${estadoClass}">
+                                    <i class="${estadoIcon} mr-1"></i>
+                                    ${estadoTexto}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                            <p>Esta variante no tiene stock en ninguna ubicación</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Mostrar el modal
+        const modal = document.getElementById('stock-detail-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    },
+    
+    closeStockDetailModal() {
+        const modal = document.getElementById('stock-detail-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     },
 
     // Placeholder methods for actions
@@ -704,6 +825,48 @@ window.stockInventarioModule = {
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200" id="pagination-container">
                     <!-- Pagination will be populated here -->
+                </div>
+            </div>
+
+            <!-- Modal para ver stock por ubicación -->
+            <div id="stock-detail-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+                <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-900" id="modal-title">Detalle de Stock por Ubicación</h3>
+                        <button onclick="stockInventarioModule.closeStockDetailModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Información de la variante -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4" id="variant-info">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    
+                    <!-- Tabla de ubicaciones -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Disponible</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Mínimo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-detail-tbody" class="bg-white divide-y divide-gray-200">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="stockInventarioModule.closeStockDetailModal()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;

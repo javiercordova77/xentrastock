@@ -1,6 +1,7 @@
 // Módulo Movimientos
 window.movimientosModule = {
     movimientos: [],
+    allMovimientos: [], // Todos los movimientos sin filtrar
     productos: [],
     variantes: [],
     ubicaciones: [],
@@ -9,6 +10,14 @@ window.movimientosModule = {
     loading: false,
     showModal: false,
     showFilters: false,
+    eventsInitialized: false,
+    isSubmitting: false,
+    // Propiedades de paginación
+    currentPage: 1,
+    itemsPerPage: 20,
+    totalItems: 0,
+    // Propiedades de filtros
+    filtersActive: false,
     formData: {
         tipo: 'entrada',
         id_producto: '',
@@ -23,37 +32,21 @@ window.movimientosModule = {
     },
 
     async load() {
+        // Resetear estado del módulo
+        this.eventsInitialized = false;
+        this.isSubmitting = false;
+        
         const container = document.getElementById('movimientos-content');
         container.innerHTML = this.getMainHTML();
         await this.loadData();
         this.bindEvents();
+        this.eventsInitialized = true;
         this.renderMovimientos();
     },
 
     getMainHTML() {
         return `
             <div class="space-y-6">
-                <!-- Header -->
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
-                            <i class="fas fa-exchange-alt mr-3 text-blue-600"></i>
-                            Movimientos de Inventario
-                        </h1>
-                        <p class="text-gray-600 mt-1">Gestión completa de entradas, salidas y ajustes de inventario</p>
-                    </div>
-                    <div class="flex space-x-3">
-                        <button id="btn-refresh" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
-                            <i class="fas fa-sync-alt mr-2"></i>
-                            Actualizar
-                        </button>
-                        <button id="btn-new-movimiento" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-                            <i class="fas fa-plus mr-2"></i>
-                            Nuevo Movimiento
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Filtros y búsqueda -->
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -68,10 +61,14 @@ window.movimientosModule = {
                                 Filtros
                             </button>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm text-gray-500" id="count-movimientos">0 movimientos</span>
-                            <button id="btn-refresh-small" class="p-2 text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-sync-alt"></i>
+                        <div class="flex space-x-3">
+                            <button id="btn-refresh" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+                                <i class="fas fa-sync-alt mr-2"></i>
+                                Actualizar
+                            </button>
+                            <button id="btn-new-movimiento" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                Nuevo Movimiento
                             </button>
                         </div>
                     </div>
@@ -106,6 +103,61 @@ window.movimientosModule = {
                         <div class="mt-4 flex justify-end">
                             <button id="btn-clear-filters" class="px-4 py-2 text-gray-600 hover:text-gray-800">
                                 Limpiar filtros
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard de Movimientos -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200">
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-green-600" id="ingresos-hoy">0</p>
+                            <p class="text-sm text-gray-600">Ingresos Hoy</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-red-600" id="salidas-hoy">0</p>
+                            <p class="text-sm text-gray-600">Salidas Hoy</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-900" id="total-movimientos">0</p>
+                            <p class="text-sm text-gray-600">Total Movimientos</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-blue-600" id="cantidad-movida">0</p>
+                            <p class="text-sm text-gray-600">Cantidad Movida</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles de paginación y vista -->
+                <div class="bg-white rounded-lg shadow p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-700">Mostrar:</span>
+                                <select id="items-per-page" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <span class="text-sm text-gray-700">registros</span>
+                            </div>
+                            <div class="text-sm text-gray-700" id="pagination-info">
+                                Mostrando 0 de 0 registros
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2" id="pagination-controls">
+                            <button id="btn-first-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button id="btn-prev-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <span class="text-sm text-gray-700" id="page-info">Página 1 de 1</span>
+                            <button id="btn-next-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button id="btn-last-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <i class="fas fa-angle-double-right"></i>
                             </button>
                         </div>
                     </div>
@@ -261,7 +313,7 @@ window.movimientosModule = {
                             <button type="button" id="btn-cancel-modal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                                 Cancelar
                             </button>
-                            <button type="submit" id="btn-submit-modal" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+                            <button type="button" id="btn-submit-modal" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
                                 <i class="fas fa-check mr-2"></i>
                                 Registrar Movimiento
                             </button>
@@ -282,7 +334,11 @@ window.movimientosModule = {
                 fetch('http://localhost:3001/api/ubicaciones').then(r => r.json())
             ]);
 
-            if (movimientosRes.success) this.movimientos = movimientosRes.data;
+            if (movimientosRes.success) {
+                this.allMovimientos = movimientosRes.data;
+                this.movimientos = [...this.allMovimientos];
+                this.totalItems = this.movimientos.length;
+            }
             if (productosRes.success) this.productos = productosRes.data;
             if (variantesRes.success) this.variantes = variantesRes.data;
             if (ubicacionesRes.success) this.ubicaciones = ubicacionesRes.data;
@@ -336,31 +392,99 @@ window.movimientosModule = {
             }
 
             const selectMotivo = document.getElementById('select-motivo');
-            selectMotivo.innerHTML = '<option value="">Seleccionar motivo...</option>';
-            this.motivosDisponibles.forEach(motivo => {
-                selectMotivo.innerHTML += `<option value="${motivo}">${motivo}</option>`;
-            });
+            if (selectMotivo) {
+                selectMotivo.innerHTML = '<option value="">Seleccionar motivo...</option>';
+                this.motivosDisponibles.forEach(motivo => {
+                    selectMotivo.innerHTML += `<option value="${motivo}">${motivo}</option>`;
+                });
+            }
         } catch (error) {
             console.error('Error cargando motivos:', error);
         }
     },
 
+
+
+    checkIfFiltersActive() {
+        const searchTerm = document.getElementById('search-input')?.value || '';
+        const tipoFilter = document.getElementById('filter-tipo')?.value || '';
+        const ubicacionFilter = document.getElementById('filter-ubicacion')?.value || '';
+        const fechaInicio = document.getElementById('filter-fecha-inicio')?.value || '';
+        const fechaFin = document.getElementById('filter-fecha-fin')?.value || '';
+        
+        this.filtersActive = !!(searchTerm || tipoFilter || ubicacionFilter || fechaInicio || fechaFin);
+    },
+
+    getPaginatedMovimientos() {
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        return this.movimientos.slice(startIndex, endIndex);
+    },
+
+    updatePaginationInfo() {
+        const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        const startItem = this.totalItems > 0 ? (this.currentPage - 1) * this.itemsPerPage + 1 : 0;
+        const endItem = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
+        
+        // Actualizar información de paginación
+        const paginationInfo = document.getElementById('pagination-info');
+        const pageInfo = document.getElementById('page-info');
+        
+        if (paginationInfo) {
+            paginationInfo.textContent = `Mostrando ${startItem} a ${endItem} de ${this.totalItems} registros`;
+        }
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Página ${this.currentPage} de ${totalPages}`;
+        }
+        
+        // Actualizar estado de botones
+        const btnFirst = document.getElementById('btn-first-page');
+        const btnPrev = document.getElementById('btn-prev-page');
+        const btnNext = document.getElementById('btn-next-page');
+        const btnLast = document.getElementById('btn-last-page');
+        
+        if (btnFirst) btnFirst.disabled = this.currentPage <= 1;
+        if (btnPrev) btnPrev.disabled = this.currentPage <= 1;
+        if (btnNext) btnNext.disabled = this.currentPage >= totalPages;
+        if (btnLast) btnLast.disabled = this.currentPage >= totalPages;
+    },
+
+    changePage(page) {
+        const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        
+        this.currentPage = page;
+        this.renderMovimientos();
+    },
+
+    changeItemsPerPage(newSize) {
+        this.itemsPerPage = parseInt(newSize);
+        this.currentPage = 1;
+        this.renderMovimientos();
+    },
+
     renderMovimientos() {
         const tbody = document.getElementById('movimientos-tbody');
         const emptyState = document.getElementById('empty-state');
-        const countSpan = document.getElementById('count-movimientos');
+
+        // Actualizar información de paginación
+        this.updatePaginationInfo();
 
         if (this.movimientos.length === 0) {
             tbody.innerHTML = '';
-            emptyState.classList.remove('hidden');
-            countSpan.textContent = '0 movimientos';
+            if (emptyState) emptyState.classList.remove('hidden');
+            this.updateDashboard();
             return;
         }
 
-        emptyState.classList.add('hidden');
-        countSpan.textContent = `${this.movimientos.length} movimientos`;
+        if (emptyState) emptyState.classList.add('hidden');
 
-        tbody.innerHTML = this.movimientos.map(movimiento => {
+        // Obtener movimientos paginados
+        const paginatedMovimientos = this.getPaginatedMovimientos();
+
+        tbody.innerHTML = paginatedMovimientos.map(movimiento => {
             const tipoIcon = this.getTipoIcon(movimiento.tipo);
             const tipoColor = this.getTipoColor(movimiento.tipo);
             const fecha = new Date(movimiento.fecha).toLocaleDateString('es-ES');
@@ -422,6 +546,9 @@ window.movimientosModule = {
                 </tr>
             `;
         }).join('');
+
+        // Actualizar dashboard después de renderizar
+        this.updateDashboard();
     },
 
     getTipoIcon(tipo) {
@@ -466,69 +593,94 @@ window.movimientosModule = {
 
     bindEvents() {
         // Botón nuevo movimiento
-        document.getElementById('btn-new-movimiento').addEventListener('click', () => {
+        document.getElementById('btn-new-movimiento').onclick = () => {
             this.showModal = true;
             document.getElementById('modal-nuevo-movimiento').classList.remove('hidden');
-        });
+            // Cargar motivos por defecto para "entrada" cuando se abre el modal
+            this.loadMotivos('entrada');
+        };
 
         // Cerrar modal
-        document.getElementById('btn-close-modal').addEventListener('click', () => {
-            this.closeModal();
-        });
-        document.getElementById('btn-cancel-modal').addEventListener('click', () => {
-            this.closeModal();
-        });
+        document.getElementById('btn-close-modal').onclick = () => this.closeModal();
+        document.getElementById('btn-cancel-modal').onclick = () => this.closeModal();
 
         // Toggle filtros
-        document.getElementById('btn-toggle-filters').addEventListener('click', () => {
+        document.getElementById('btn-toggle-filters').onclick = () => {
             const panel = document.getElementById('filters-panel');
             panel.classList.toggle('hidden');
-        });
+        };
 
         // Refrescar
-        document.getElementById('btn-refresh').addEventListener('click', () => {
+        document.getElementById('btn-refresh').onclick = () => {
             this.loadData().then(() => this.renderMovimientos());
-        });
+        };
 
         // Tipo de movimiento en modal
         document.querySelectorAll('input[name="tipo"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
+            radio.onchange = (e) => {
                 this.updateTipoSelection(e.target.value);
                 this.loadMotivos(e.target.value);
-            });
+            };
         });
 
         // Producto cambia -> actualizar variantes
-        document.getElementById('select-producto').addEventListener('change', (e) => {
+        document.getElementById('select-producto').onchange = (e) => {
             this.updateVariantes(e.target.value);
-        });
+        };
 
-        // Submit formulario
-        document.getElementById('form-movimiento').addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Submit formulario - solo por botón
+        document.getElementById('btn-submit-modal').onclick = () => {
             this.submitMovimiento();
-        });
+        };
+
+        // Prevenir submit del formulario con Enter
+        document.getElementById('form-movimiento').onsubmit = (e) => {
+            e.preventDefault();
+            return false;
+        };
 
         // Búsqueda
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        document.getElementById('search-input').oninput = () => {
             this.filtrarMovimientos();
-        });
+        };
 
         // Filtros
-        document.getElementById('filter-tipo').addEventListener('change', () => this.filtrarMovimientos());
-        document.getElementById('filter-ubicacion').addEventListener('change', () => this.filtrarMovimientos());
-        document.getElementById('filter-fecha-inicio').addEventListener('change', () => this.filtrarMovimientos());
-        document.getElementById('filter-fecha-fin').addEventListener('change', () => this.filtrarMovimientos());
+        document.getElementById('filter-tipo').onchange = () => this.filtrarMovimientos();
+        document.getElementById('filter-ubicacion').onchange = () => this.filtrarMovimientos();
+        document.getElementById('filter-fecha-inicio').onchange = () => this.filtrarMovimientos();
+        document.getElementById('filter-fecha-fin').onchange = () => this.filtrarMovimientos();
 
         // Limpiar filtros
-        document.getElementById('btn-clear-filters').addEventListener('click', () => {
+        document.getElementById('btn-clear-filters').onclick = () => {
             document.getElementById('search-input').value = '';
             document.getElementById('filter-tipo').value = '';
             document.getElementById('filter-ubicacion').value = '';
             document.getElementById('filter-fecha-inicio').value = '';
             document.getElementById('filter-fecha-fin').value = '';
             this.filtrarMovimientos();
-        });
+        };
+
+        // Eventos de paginación
+        document.getElementById('items-per-page').onchange = (e) => {
+            this.changeItemsPerPage(e.target.value);
+        };
+
+        document.getElementById('btn-first-page').onclick = () => {
+            this.changePage(1);
+        };
+
+        document.getElementById('btn-prev-page').onclick = () => {
+            this.changePage(this.currentPage - 1);
+        };
+
+        document.getElementById('btn-next-page').onclick = () => {
+            this.changePage(this.currentPage + 1);
+        };
+
+        document.getElementById('btn-last-page').onclick = () => {
+            const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+            this.changePage(totalPages);
+        };
     },
 
     updateTipoSelection(tipo) {
@@ -562,7 +714,20 @@ window.movimientosModule = {
     },
 
     async submitMovimiento() {
+        // Prevenir múltiples envíos simultáneos
+        if (this.isSubmitting) {
+            console.log('Ya se está procesando un movimiento, ignorando...');
+            return;
+        }
+        
+        this.isSubmitting = true;
         const submitBtn = document.getElementById('btn-submit-modal');
+        
+        if (!submitBtn) {
+            this.isSubmitting = false;
+            return;
+        }
+        
         const originalText = submitBtn.innerHTML;
         
         try {
@@ -599,6 +764,7 @@ window.movimientosModule = {
                 window.app.showToast('success', 'Éxito', result.message || 'Movimiento registrado correctamente');
                 this.closeModal();
                 this.resetForm();
+                // Recargar datos solo una vez
                 await this.loadData();
                 this.renderMovimientos();
             } else {
@@ -608,6 +774,7 @@ window.movimientosModule = {
             console.error('Error:', error);
             window.app.showToast('error', 'Error', 'Error al conectar con el servidor');
         } finally {
+            this.isSubmitting = false;
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         }
@@ -616,6 +783,8 @@ window.movimientosModule = {
     closeModal() {
         this.showModal = false;
         document.getElementById('modal-nuevo-movimiento').classList.add('hidden');
+        // Resetear el formulario para la próxima vez
+        this.resetForm();
     },
 
     resetForm() {
@@ -628,14 +797,19 @@ window.movimientosModule = {
     },
 
     filtrarMovimientos() {
+        // Verificar si hay filtros activos
+        this.checkIfFiltersActive();
+        
         const searchTerm = document.getElementById('search-input').value.toLowerCase();
         const tipoFilter = document.getElementById('filter-tipo').value;
         const ubicacionFilter = document.getElementById('filter-ubicacion').value;
         const fechaInicio = document.getElementById('filter-fecha-inicio').value;
         const fechaFin = document.getElementById('filter-fecha-fin').value;
 
-        let movimientosFiltrados = [...this.movimientos];
+        // Empezar siempre con todos los movimientos
+        let movimientosFiltrados = [...this.allMovimientos];
 
+        // Aplicar filtros específicos
         if (searchTerm) {
             movimientosFiltrados = movimientosFiltrados.filter(m => 
                 m.producto_descripcion.toLowerCase().includes(searchTerm) ||
@@ -666,11 +840,14 @@ window.movimientosModule = {
             );
         }
 
-        // Actualizar vista con movimientos filtrados
-        const movimientosOriginales = [...this.movimientos];
+        // Actualizar movimientos filtrados y resetear paginación
         this.movimientos = movimientosFiltrados;
+        this.totalItems = movimientosFiltrados.length;
+        this.currentPage = 1;
+        
+        // Renderizar y actualizar dashboard
         this.renderMovimientos();
-        this.movimientos = movimientosOriginales; // Restaurar originales
+        this.updateDashboard();
     },
 
     verDetalles(id) {
@@ -698,6 +875,60 @@ window.movimientosModule = {
                     </div>
                 </div>
             `);
+        }
+    },
+
+    updateDashboard() {
+        // Obtener fecha de hoy en formato local
+        const today = new Date();
+        const todayStr = today.getFullYear() + '-' + 
+            String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(today.getDate()).padStart(2, '0');
+        
+        // Usar todos los movimientos para el dashboard
+        const todosLosMovimientos = this.allMovimientos;
+        
+        // Filtrar movimientos de hoy (comparar solo la fecha, no la hora)
+        const movimientosHoy = todosLosMovimientos.filter(m => {
+            let fechaMovimiento;
+            if (m.fecha) {
+                // Si la fecha incluye hora, extraer solo la parte de la fecha
+                fechaMovimiento = m.fecha.split(' ')[0];
+                // Si no tiene hora, usar tal como está
+                if (!fechaMovimiento) {
+                    fechaMovimiento = m.fecha.split('T')[0];
+                }
+            }
+            return fechaMovimiento === todayStr;
+        });
+
+        // Calcular métricas
+        const ingresosHoy = movimientosHoy.filter(m => m.tipo === 'entrada').length;
+        const salidasHoy = movimientosHoy.filter(m => m.tipo === 'salida').length;
+        const totalMovimientos = todosLosMovimientos.length;
+        
+        // Calcular cantidad movida (suma total de cantidades)
+        const cantidadMovida = todosLosMovimientos.reduce((total, m) => {
+            if (m.cantidad) {
+                return total + parseInt(m.cantidad);
+            }
+            return total;
+        }, 0);
+
+
+
+        // Actualizar elementos del DOM
+        const ingresosElement = document.getElementById('ingresos-hoy');
+        const salidasElement = document.getElementById('salidas-hoy');
+        const totalElement = document.getElementById('total-movimientos');
+        const cantidadElement = document.getElementById('cantidad-movida');
+
+        if (ingresosElement) ingresosElement.textContent = ingresosHoy;
+        if (salidasElement) salidasElement.textContent = salidasHoy;
+        if (totalElement) totalElement.textContent = totalMovimientos;
+        if (cantidadElement) {
+            const unidadTexto = cantidadMovida <= 1 ? 'u.' : 'uds.';
+            cantidadElement.textContent = `${cantidadMovida.toLocaleString('es-ES')} ${unidadTexto}`;
         }
     }
 };

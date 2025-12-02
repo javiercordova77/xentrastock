@@ -35,6 +35,7 @@ router.get('/', asyncHandler(async (req, res) => {
 	const { id_variante, id_ubicacion, tipo, desde, hasta } = req.query;
 	let query = `SELECT 
 		m.id,
+		m.id_ubicacion,
 		m.tipo,
 		m.subtipo,
 		m.cantidad,
@@ -100,6 +101,25 @@ router.post('/', [
 	else if (tipo === 'ajuste') nuevaCantidad = cantidad;
 
 	if (nuevaCantidad < 0) return res.status(400).json({ success: false, message: 'Stock insuficiente para la operación' });
+
+	// Verificar movimientos duplicados recientes (últimos 5 segundos)
+	const recentDuplicate = await new Promise((resolve, reject) => {
+		const query = `SELECT id FROM movimientos 
+			WHERE id_variante = ? AND id_ubicacion = ? AND tipo = ? AND cantidad = ? AND usuario = ? 
+			AND datetime(created_at) > datetime('now', '-5 seconds')
+			LIMIT 1`;
+		db.get(query, [id_variante, id_ubicacion, tipo, cantidad, usuario || 'admin'], (err, row) => {
+			if (err) reject(err);
+			else resolve(row);
+		});
+	});
+
+	if (recentDuplicate) {
+		return res.status(409).json({ 
+			success: false, 
+			message: 'Movimiento duplicado detectado. Espere unos segundos antes de registrar el mismo movimiento.' 
+		});
+	}
 
 	// Upsert stock
 	if (current) {
