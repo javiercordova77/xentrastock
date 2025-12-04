@@ -6,6 +6,8 @@ window.movimientosModule = {
     variantes: [],
     ubicaciones: [],
     filteredVariantes: [],
+    variantesDelProducto: [],
+    varianteSearchTimeout: null,
     motivosDisponibles: [],
     loading: false,
     showModal: false,
@@ -18,6 +20,9 @@ window.movimientosModule = {
     totalItems: 0,
     // Propiedades de filtros
     filtersActive: false,
+    // Propiedades de búsqueda de productos
+    productSearchTimeout: null,
+    selectedProductId: null,
     formData: {
         tipo: 'entrada',
         id_producto: '',
@@ -248,17 +253,40 @@ window.movimientosModule = {
 
                         <!-- Selección de producto y variante -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
+                            <div class="relative">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Producto *</label>
-                                <select id="select-producto" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                    <option value="">Seleccionar producto...</option>
-                                </select>
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="input-producto-search" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10" 
+                                           placeholder="Buscar o seleccionar producto..."
+                                           autocomplete="off">
+                                    <input type="hidden" id="selected-producto-id" value="">
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                    <!-- Dropdown de resultados -->
+                                    <div id="producto-dropdown" class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                        <!-- Resultados se llenarán dinámicamente -->
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Variante *</label>
-                                <select id="select-variante" class="w-full border border-gray-300 rounded-lg px-3 py-2" disabled>
-                                    <option value="">Seleccionar variante...</option>
-                                </select>
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="input-variante-search" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10" 
+                                           placeholder="Buscar o seleccionar variante..."
+                                           autocomplete="off"
+                                           disabled>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400 text-sm"></i>
+                                    </div>
+                                    <input type="hidden" id="select-variante" name="variante">
+                                    <div id="variante-dropdown" class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -321,6 +349,30 @@ window.movimientosModule = {
                     </form>
                 </div>
             </div>
+
+            <!-- Modal para ver detalles del movimiento -->
+            <div id="modal-detalle-movimiento" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">Detalles del Movimiento</h3>
+                            <button onclick="window.movimientosModule.cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="detalle-movimiento-content">
+                            <!-- El contenido se carga dinámicamente -->
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                        <button onclick="window.movimientosModule.cerrarModalDetalle()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
     },
 
@@ -353,12 +405,8 @@ window.movimientosModule = {
     },
 
     populateSelects() {
-        // Productos
-        const selectProducto = document.getElementById('select-producto');
-        selectProducto.innerHTML = '<option value="">Seleccionar producto...</option>';
-        this.productos.forEach(producto => {
-            selectProducto.innerHTML += `<option value="${producto.id}">${producto.descripcion}</option>`;
-        });
+        // Inicializar búsqueda de productos (no necesita llenar opciones inicialmente)
+        this.setupProductSearch();
 
         // Ubicaciones
         const selectUbicacion = document.getElementById('select-ubicacion');
@@ -623,10 +671,77 @@ window.movimientosModule = {
             };
         });
 
-        // Producto cambia -> actualizar variantes
-        document.getElementById('select-producto').onchange = (e) => {
-            this.updateVariantes(e.target.value);
-        };
+        // Búsqueda de productos
+        const productSearchInput = document.getElementById('input-producto-search');
+        if (productSearchInput) {
+            productSearchInput.oninput = (e) => {
+                this.handleProductSearch(e.target.value);
+            };
+            
+            // Al hacer backspace y quedar vacío, mostrar todos los productos
+            productSearchInput.onkeydown = (e) => {
+                if ((e.key === 'Backspace' || e.key === 'Delete') && e.target.value.length === 1) {
+                    setTimeout(() => {
+                        if (e.target.value.length === 0) {
+                            this.showAllProducts();
+                        }
+                    }, 10);
+                }
+            };
+            
+            productSearchInput.onfocus = () => {
+                // Mostrar todos los productos si no hay búsqueda activa
+                if (productSearchInput.value.length === 0) {
+                    this.showAllProducts();
+                } else if (productSearchInput.value.length >= 2) {
+                    this.handleProductSearch(productSearchInput.value);
+                }
+            };
+        }
+
+        // Búsqueda de variantes
+        const varianteSearchInput = document.getElementById('input-variante-search');
+        if (varianteSearchInput) {
+            varianteSearchInput.oninput = (e) => {
+                this.handleVarianteSearch(e.target.value);
+            };
+            
+            // Al hacer backspace y quedar vacío, mostrar todas las variantes
+            varianteSearchInput.onkeydown = (e) => {
+                if ((e.key === 'Backspace' || e.key === 'Delete') && e.target.value.length === 1) {
+                    setTimeout(() => {
+                        if (e.target.value.length === 0) {
+                            this.showAllVariantes();
+                        }
+                    }, 10);
+                }
+            };
+            
+            varianteSearchInput.onfocus = () => {
+                // Mostrar todas las variantes si no hay búsqueda activa
+                if (varianteSearchInput.value.length === 0) {
+                    this.showAllVariantes();
+                } else if (varianteSearchInput.value.length >= 2) {
+                    this.handleVarianteSearch(varianteSearchInput.value);
+                }
+            };
+        }
+            
+        // Cerrar dropdowns al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#input-producto-search') && !e.target.closest('#producto-dropdown')) {
+                this.hideProductDropdown();
+            }
+            if (!e.target.closest('#input-variante-search') && !e.target.closest('#variante-dropdown')) {
+                this.hideVarianteDropdown();
+            }
+            
+            // Cerrar modal de detalles al hacer clic fuera
+            const modal = document.getElementById('modal-detalle-movimiento');
+            if (modal && e.target === modal) {
+                this.cerrarModalDetalle();
+            }
+        });
 
         // Submit formulario - solo por botón
         document.getElementById('btn-submit-modal').onclick = () => {
@@ -698,19 +813,363 @@ window.movimientosModule = {
         selectedCard.className = `tipo-card border-2 rounded-lg p-4 cursor-pointer transition-all ${colors[tipo]}`;
     },
 
+    setupProductSearch() {
+        // Función inicial para configurar la búsqueda
+        this.selectedProductId = null;
+    },
+
+    handleProductSearch(query) {
+        clearTimeout(this.productSearchTimeout);
+        
+        if (query.length === 0) {
+            this.showAllProducts();
+            return;
+        }
+        
+        if (query.length < 2) {
+            this.hideProductDropdown();
+            return;
+        }
+
+        this.productSearchTimeout = setTimeout(() => {
+            this.searchProducts(query);
+        }, 300);
+    },
+
+    showAllProducts() {
+        // Mostrar todos los productos disponibles
+        this.showProductDropdown(this.productos, true);
+    },
+
+    searchProducts(query) {
+        const filteredProducts = this.productos.filter(producto => 
+            producto.descripcion.toLowerCase().includes(query.toLowerCase())
+        );
+
+        this.showProductDropdown(filteredProducts);
+    },
+
+    showProductDropdown(products, showAll = false) {
+        const dropdown = document.getElementById('producto-dropdown');
+        if (!dropdown) return;
+
+        if (products.length === 0) {
+            dropdown.innerHTML = `
+                <div class="px-4 py-3 text-sm text-gray-500 text-center">
+                    <i class="fas fa-search text-gray-300 text-lg mb-1"></i>
+                    <p>No se encontraron productos</p>
+                </div>
+            `;
+        } else {
+            let headerHtml = '';
+            if (showAll) {
+                headerHtml = `
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-600 font-medium sticky top-0">
+                        <i class="fas fa-list mr-1"></i>
+                        Todos los productos (${products.length})
+                    </div>
+                `;
+            }
+            
+            dropdown.innerHTML = headerHtml + products.map(producto => `
+                <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 product-option"
+                     data-id="${producto.id}" 
+                     data-description="${producto.descripcion}">
+                    <p class="text-gray-900">${producto.descripcion}</p>
+                </div>
+            `).join('');
+
+            // Agregar event listeners a las opciones
+            dropdown.querySelectorAll('.product-option').forEach(option => {
+                option.onclick = () => {
+                    const productId = option.dataset.id;
+                    const productDescription = option.dataset.description;
+                    this.selectProduct(productId, productDescription);
+                };
+            });
+        }
+
+        dropdown.classList.remove('hidden');
+    },
+
+    hideProductDropdown() {
+        const dropdown = document.getElementById('producto-dropdown');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+    },
+
+    // Métodos para el control de variantes
+    handleVarianteSearch(query) {
+        clearTimeout(this.varianteSearchTimeout);
+        
+        if (query.length === 0) {
+            this.showAllVariantes();
+            return;
+        }
+        
+        if (query.length < 2) {
+            this.hideVarianteDropdown();
+            return;
+        }
+
+        this.varianteSearchTimeout = setTimeout(() => {
+            this.searchVariantes(query);
+        }, 300);
+    },
+
+    showAllVariantes() {
+        // Mostrar todas las variantes disponibles del producto seleccionado
+        this.showVarianteDropdown(this.variantesDelProducto, true);
+    },
+
+    searchVariantes(query) {
+        const filteredVariantes = this.variantesDelProducto.filter(variante => {
+            const varianteText = `${variante.codigo_variante} - ${variante.medida}`;
+            return varianteText.toLowerCase().includes(query.toLowerCase());
+        });
+
+        this.showVarianteDropdown(filteredVariantes);
+    },
+
+    showVarianteDropdown(variantes, showAll = false) {
+        const dropdown = document.getElementById('variante-dropdown');
+        if (!dropdown) return;
+
+        if (variantes.length === 0) {
+            dropdown.innerHTML = `
+                <div class="px-4 py-3 text-sm text-gray-500 text-center">
+                    <i class="fas fa-search text-gray-300 text-lg mb-1"></i>
+                    <p>No se encontraron variantes</p>
+                </div>
+            `;
+        } else {
+            let headerHtml = '';
+            if (showAll) {
+                headerHtml = `
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-600 font-medium sticky top-0">
+                        <i class="fas fa-list mr-1"></i>
+                        Todas las variantes (${variantes.length})
+                    </div>
+                `;
+            }
+            
+            dropdown.innerHTML = headerHtml + variantes.map(variante => `
+                <div class="px-4 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 variante-option"
+                     data-id="${variante.id}" 
+                     data-description="${variante.codigo_variante} - ${variante.medida}">
+                    <p class="text-gray-900">${variante.codigo_variante} - ${variante.medida}</p>
+                </div>
+            `).join('');
+
+            // Agregar event listeners a las opciones
+            dropdown.querySelectorAll('.variante-option').forEach(option => {
+                option.onclick = () => {
+                    const varianteId = option.dataset.id;
+                    const varianteDescription = option.dataset.description;
+                    this.selectVariante(varianteId, varianteDescription);
+                };
+            });
+        }
+
+        dropdown.classList.remove('hidden');
+    },
+
+    selectVariante(varianteId, varianteDescription) {
+        const searchInput = document.getElementById('input-variante-search');
+        const hiddenInput = document.getElementById('select-variante');
+        
+        if (searchInput && hiddenInput) {
+            searchInput.value = varianteDescription;
+            hiddenInput.value = varianteId;
+            this.hideVarianteDropdown();
+        }
+    },
+
+    hideVarianteDropdown() {
+        const dropdown = document.getElementById('variante-dropdown');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+    },
+
+    selectProduct(productId, productDescription) {
+        // Actualizar el input y el campo oculto
+        const searchInput = document.getElementById('input-producto-search');
+        const hiddenInput = document.getElementById('selected-producto-id');
+        
+        if (searchInput) searchInput.value = productDescription;
+        if (hiddenInput) hiddenInput.value = productId;
+        
+        this.selectedProductId = productId;
+        this.hideProductDropdown();
+        
+        // Actualizar variantes
+        this.updateVariantes(productId);
+    },
+
     updateVariantes(productoId) {
+        const varianteSearchInput = document.getElementById('input-variante-search');
         const selectVariante = document.getElementById('select-variante');
-        selectVariante.innerHTML = '<option value="">Seleccionar variante...</option>';
         
         if (productoId) {
-            const variantesDelProducto = this.variantes.filter(v => v.id_producto == productoId);
-            variantesDelProducto.forEach(variante => {
-                selectVariante.innerHTML += `<option value="${variante.id}">${variante.codigo_variante} - ${variante.medida}</option>`;
-            });
-            selectVariante.disabled = false;
+            // Filtrar variantes del producto seleccionado
+            this.variantesDelProducto = this.variantes.filter(v => v.id_producto == productoId);
+            
+            // Habilitar el control
+            if (varianteSearchInput) {
+                varianteSearchInput.disabled = false;
+                varianteSearchInput.placeholder = "Buscar o seleccionar variante...";
+            }
         } else {
-            selectVariante.disabled = true;
+            // Deshabilitar y limpiar el control
+            this.variantesDelProducto = [];
+            if (varianteSearchInput) {
+                varianteSearchInput.disabled = true;
+                varianteSearchInput.value = '';
+                varianteSearchInput.placeholder = "Selecciona primero un producto...";
+            }
+            if (selectVariante) {
+                selectVariante.value = '';
+            }
+            this.hideVarianteDropdown();
         }
+    },
+
+    async verDetalles(movimientoId) {
+        try {
+            // Buscar el movimiento en los datos ya cargados
+            const movimiento = this.allMovimientos.find(m => m.id === movimientoId);
+            
+            if (!movimiento) {
+                alert('No se encontró el movimiento solicitado');
+                return;
+            }
+
+            // Formatear la fecha
+            const fecha = new Date(movimiento.fecha).toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Formatear cantidad con unidades
+            const cantidad = movimiento.cantidad;
+            const unidad = cantidad === 1 ? 'u.' : 'uds.';
+
+            // Formatear precio
+            const precio = movimiento.precio_unitario ? `$${Number(movimiento.precio_unitario).toLocaleString()}` : 'No especificado';
+            const valorTotal = movimiento.valor_total ? `$${Number(movimiento.valor_total).toLocaleString()}` : 'No calculado';
+
+            // Generar el HTML con los detalles más compacto
+            const detalleHTML = `
+                <div class="space-y-3">
+                    <!-- Información básica en una fila -->
+                    <div class="grid grid-cols-4 gap-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">ID</span>
+                            <span class="font-semibold">${movimiento.id}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Tipo</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                movimiento.tipo === 'entrada' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                            }">
+                                ${movimiento.tipo.charAt(0).toUpperCase() + movimiento.tipo.slice(1)}
+                            </span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Cantidad</span>
+                            <span class="font-semibold text-lg">${cantidad} ${unidad}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Usuario</span>
+                            <span class="font-semibold">${movimiento.usuario || 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Producto y Variante -->
+                    <div class="bg-blue-50 p-3 rounded">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <span class="text-xs text-gray-600 block">Producto</span>
+                                <span class="font-semibold text-gray-900">${movimiento.producto_descripcion}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-600 block">Variante</span>
+                                <span class="text-gray-900">${movimiento.codigo_variante} - ${movimiento.variante_medida}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalles del movimiento -->
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Ubicación</span>
+                            <span class="font-medium">${movimiento.ubicacion_nombre}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Motivo</span>
+                            <span class="font-medium">${movimiento.motivo || 'No especificado'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Información financiera -->
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-green-50 p-3 rounded">
+                            <span class="text-xs text-green-600 block">Precio Unitario</span>
+                            <span class="font-semibold text-green-800">${precio}</span>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded">
+                            <span class="text-xs text-green-600 block">Valor Total</span>
+                            <span class="font-semibold text-green-800">${valorTotal}</span>
+                        </div>
+                    </div>
+
+                    <!-- Referencia y Observaciones -->
+                    ${(movimiento.referencia || movimiento.observaciones) ? `
+                    <div class="space-y-2">
+                        ${movimiento.referencia ? `
+                        <div class="bg-yellow-50 p-3 rounded">
+                            <span class="text-xs text-yellow-600 block">Referencia</span>
+                            <span class="text-yellow-800">${movimiento.referencia}</span>
+                        </div>
+                        ` : ''}
+                        ${movimiento.observaciones ? `
+                        <div class="bg-purple-50 p-3 rounded">
+                            <span class="text-xs text-purple-600 block">Observaciones</span>
+                            <span class="text-purple-800">${movimiento.observaciones}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    ` : ''}
+
+                    <!-- Fecha al final -->
+                    <div class="text-center text-xs text-gray-500 border-t pt-2">
+                        <i class="fas fa-calendar mr-1"></i>
+                        ${fecha}
+                    </div>
+                </div>
+            `;
+
+            // Mostrar el contenido en el modal
+            document.getElementById('detalle-movimiento-content').innerHTML = detalleHTML;
+            
+            // Mostrar el modal
+            document.getElementById('modal-detalle-movimiento').classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Error al mostrar detalles del movimiento:', error);
+            alert('Error al cargar los detalles del movimiento');
+        }
+    },
+
+    cerrarModalDetalle() {
+        document.getElementById('modal-detalle-movimiento').classList.add('hidden');
     },
 
     async submitMovimiento() {
@@ -747,7 +1206,8 @@ window.movimientosModule = {
             };
 
             // Validaciones básicas
-            if (!formData.id_variante || !formData.id_ubicacion || !formData.cantidad || !formData.motivo || !formData.usuario) {
+            const selectedProductId = document.getElementById('selected-producto-id').value;
+            if (!selectedProductId || !formData.id_variante || !formData.id_ubicacion || !formData.cantidad || !formData.motivo || !formData.usuario) {
                 window.app.showToast('error', 'Error', 'Por favor completa todos los campos requeridos');
                 return;
             }
@@ -792,8 +1252,29 @@ window.movimientosModule = {
         document.querySelector('input[value="entrada"]').checked = true;
         this.updateTipoSelection('entrada');
         this.loadMotivos('entrada');
-        document.getElementById('select-variante').disabled = true;
         document.getElementById('input-usuario').value = 'Juan';
+        
+        // Limpiar búsqueda de productos
+        const searchInput = document.getElementById('input-producto-search');
+        const hiddenInput = document.getElementById('selected-producto-id');
+        if (searchInput) searchInput.value = '';
+        if (hiddenInput) hiddenInput.value = '';
+        this.selectedProductId = null;
+        this.hideProductDropdown();
+        
+        // Limpiar búsqueda de variantes
+        const varianteSearchInput = document.getElementById('input-variante-search');
+        const selectVariante = document.getElementById('select-variante');
+        if (varianteSearchInput) {
+            varianteSearchInput.disabled = true;
+            varianteSearchInput.value = '';
+            varianteSearchInput.placeholder = "Selecciona primero un producto...";
+        }
+        if (selectVariante) {
+            selectVariante.value = '';
+        }
+        this.hideVarianteDropdown();
+        this.variantesDelProducto = [];
     },
 
     filtrarMovimientos() {
@@ -850,33 +1331,7 @@ window.movimientosModule = {
         this.updateDashboard();
     },
 
-    verDetalles(id) {
-        const movimiento = this.movimientos.find(m => m.id === id);
-        if (movimiento) {
-            const fecha = new Date(movimiento.fecha).toLocaleString('es-ES');
-            const valor = movimiento.precio_unitario ? `$${movimiento.precio_unitario}` : 'No especificado';
-            const total = movimiento.valor_total ? `$${movimiento.valor_total}` : 'No calculado';
 
-            window.app.showModal('Detalles del Movimiento', `
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div><strong>ID:</strong> ${movimiento.id}</div>
-                        <div><strong>Tipo:</strong> <span class="${this.getTipoColor(movimiento.tipo)}">${movimiento.tipo.toUpperCase()}</span></div>
-                        <div><strong>Producto:</strong> ${movimiento.producto_descripcion}</div>
-                        <div><strong>Variante:</strong> ${movimiento.codigo_variante} - ${movimiento.variante_medida}</div>
-                        <div><strong>Cantidad:</strong> ${movimiento.cantidad} unidades</div>
-                        <div><strong>Ubicación:</strong> ${movimiento.ubicacion_nombre}</div>
-                        <div><strong>Motivo:</strong> ${movimiento.motivo}</div>
-                        <div><strong>Responsable:</strong> ${movimiento.usuario}</div>
-                        <div><strong>Precio Unitario:</strong> ${valor}</div>
-                        <div><strong>Valor Total:</strong> ${total}</div>
-                        <div><strong>Referencia:</strong> ${movimiento.referencia || 'No especificada'}</div>
-                        <div><strong>Fecha:</strong> ${fecha}</div>
-                    </div>
-                </div>
-            `);
-        }
-    },
 
     updateDashboard() {
         // Obtener fecha de hoy en formato local

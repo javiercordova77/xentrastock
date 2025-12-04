@@ -5,7 +5,14 @@ window.variantesModule = {
         filteredVariants: [],
         products: [],
         searchTerm: '',
-        editingVariant: null
+        editingVariant: null,
+        // Propiedades de paginación
+        pagination: {
+            currentPage: 1,
+            itemsPerPage: 20,
+            totalItems: 0,
+            totalPages: 0
+        }
     },
 
     async load() {
@@ -23,7 +30,14 @@ window.variantesModule = {
             if (response.success) {
                 this.data.variants = response.data;
                 this.data.filteredVariants = [...this.data.variants];
+                
+                // Actualizar información de paginación
+                this.data.pagination.totalItems = this.data.filteredVariants.length;
+                this.data.pagination.totalPages = Math.ceil(this.data.filteredVariants.length / this.data.pagination.itemsPerPage);
+                this.data.pagination.currentPage = 1;
+                
                 this.renderTable();
+                this.updatePaginationInfo();
             }
         } catch (error) {
             console.error('Error loading variants:', error);
@@ -71,8 +85,16 @@ window.variantesModule = {
             if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.add('hidden');
             }
+            
+            // Cerrar modal de detalles al hacer clic fuera
+            const modal = document.getElementById('modal-detalle-variante');
+            if (modal && e.target === modal) {
+                this.cerrarModalDetalle();
+            }
         });
     },
+
+
 
     showProductDropdown(searchTerm = '') {
         const dropdown = document.getElementById('variant-producto-dropdown');
@@ -96,7 +118,7 @@ window.variantesModule = {
                          onclick="variantesModule.selectProduct(${prod.id}, '${prod.descripcion.replace(/'/g, '\\\'')}')" >
                         <div class="font-medium text-gray-900">${prod.descripcion}</div>
                         <div class="text-xs text-gray-500">
-                            ${prod.categoria_nombre || 'Sin categoría'} • ${prod.proveedor_nombre || 'Sin proveedor'}
+                            ID: ${prod.id} • ${prod.categoria_nombre || 'Sin categoría'}
                         </div>
                     </div>
                 `).join('');
@@ -136,6 +158,25 @@ window.variantesModule = {
         if (newVariantBtn) {
             newVariantBtn.addEventListener('click', () => this.openModal());
         }
+
+        // Pagination event listeners
+        const itemsPerPageSelect = document.getElementById('items-per-page-select');
+        if (itemsPerPageSelect) {
+            itemsPerPageSelect.addEventListener('change', (e) => {
+                this.changeItemsPerPage(e.target.value);
+            });
+        }
+
+        // Navigation buttons
+        const firstBtn = document.getElementById('btn-first-page');
+        const prevBtn = document.getElementById('btn-prev-page');
+        const nextBtn = document.getElementById('btn-next-page');
+        const lastBtn = document.getElementById('btn-last-page');
+
+        if (firstBtn) firstBtn.addEventListener('click', () => this.goToFirstPage());
+        if (prevBtn) prevBtn.addEventListener('click', () => this.goToPrevPage());
+        if (nextBtn) nextBtn.addEventListener('click', () => this.goToNextPage());
+        if (lastBtn) lastBtn.addEventListener('click', () => this.goToLastPage());
     },
 
     filterVariants() {
@@ -146,10 +187,17 @@ window.variantesModule = {
             this.data.filteredVariants = this.data.variants.filter(variant => 
                 variant.codigo_variante?.toLowerCase().includes(term) ||
                 variant.medida?.toLowerCase().includes(term) ||
-                variant.producto_descripcion?.toLowerCase().includes(term)
+                variant.producto_nombre?.toLowerCase().includes(term)
             );
         }
+        
+        // Actualizar información de paginación
+        this.data.pagination.totalItems = this.data.filteredVariants.length;
+        this.data.pagination.totalPages = Math.ceil(this.data.filteredVariants.length / this.data.pagination.itemsPerPage);
+        this.data.pagination.currentPage = 1; // Resetear a primera página al filtrar
+        
         this.renderTable();
+        this.updatePaginationInfo();
     },
 
     renderTable() {
@@ -167,7 +215,12 @@ window.variantesModule = {
             return;
         }
 
-        tbody.innerHTML = this.data.filteredVariants.map(variant => `
+        // Calcular elementos para la página actual
+        const startIndex = (this.data.pagination.currentPage - 1) * this.data.pagination.itemsPerPage;
+        const endIndex = startIndex + this.data.pagination.itemsPerPage;
+        const paginatedVariants = this.data.filteredVariants.slice(startIndex, endIndex);
+
+        tbody.innerHTML = paginatedVariants.map(variant => `
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
                     <div class="flex items-center">
@@ -175,12 +228,12 @@ window.variantesModule = {
                             <i class="fas fa-palette text-purple-600"></i>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900">${variant.codigo_variante || 'Sin código'}</p>
+                            <p class="text-sm font-medium text-gray-900">${variant.codigo_variante || 'Sin código'}</p>
                             <p class="text-sm text-gray-500">${variant.medida || 'Sin medida'}</p>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">${variant.producto_descripcion || 'Sin producto'}</td>
+                <td class="px-6 py-4 text-sm text-gray-900">${variant.producto_nombre || 'Sin producto'}</td>
                 <td class="px-6 py-4 text-sm text-gray-900">$${variant.precio_venta || '0.00'}</td>
                 <td class="px-6 py-4 text-sm text-gray-900">$${variant.precio_compra || '0.00'}</td>
                 <td class="px-6 py-4">
@@ -350,10 +403,103 @@ window.variantesModule = {
     },
 
     async viewVariant(id) {
-        const variant = this.data.variants.find(v => v.id === id);
-        if (variant) {
-            alert(`Variante: ${variant.codigo_variante}\nProducto: ${variant.producto_descripcion || 'N/A'}\nMedida: ${variant.medida || 'N/A'}\nPrecio Venta: $${variant.precio_venta || '0.00'}\nPrecio Compra: $${variant.precio_compra || '0.00'}\nEstado: ${variant.activo ? 'Activo' : 'Inactivo'}`);
+        try {
+            const variant = this.data.variants.find(v => v.id === id);
+            
+            if (!variant) {
+                alert('No se encontró la variante solicitada');
+                return;
+            }
+
+            // Formatear fecha
+            const fecha = variant.fecha_ingreso ? 
+                new Date(variant.fecha_ingreso).toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) : 'No especificada';
+
+            // Formatear precios
+            const precioVenta = variant.precio_venta ? `$${Number(variant.precio_venta).toLocaleString()}` : 'No especificado';
+            const precioCompra = variant.precio_compra ? `$${Number(variant.precio_compra).toLocaleString()}` : 'No especificado';
+
+            // Generar el HTML con los detalles
+            const detalleHTML = `
+                <div class="space-y-3">
+                    <!-- Información básica en una fila -->
+                    <div class="grid grid-cols-4 gap-3 text-sm">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">ID</span>
+                            <span class="font-semibold">${variant.id}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Código</span>
+                            <span class="font-semibold">${variant.codigo_variante || 'Sin código'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Medida</span>
+                            <span class="font-semibold">${variant.medida || 'Sin medida'}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="text-xs text-gray-500 block">Estado</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                variant.activo 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                            }">
+                                ${variant.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Producto Asociado -->
+                    <div class="bg-blue-50 p-3 rounded">
+                        <span class="text-xs text-blue-600 block">Producto Asociado</span>
+                        <span class="font-semibold text-blue-900">${variant.producto_nombre || 'Sin producto asignado'}</span>
+                    </div>
+
+                    <!-- Información de precios -->
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-green-50 p-3 rounded">
+                            <span class="text-xs text-green-600 block">Precio de Venta</span>
+                            <span class="font-semibold text-green-800">${precioVenta}</span>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded">
+                            <span class="text-xs text-green-600 block">Precio de Compra</span>
+                            <span class="font-semibold text-green-800">${precioCompra}</span>
+                        </div>
+                    </div>
+
+                    ${variant.descripcion ? `
+                    <!-- Descripción adicional -->
+                    <div class="bg-purple-50 p-3 rounded">
+                        <span class="text-xs text-purple-600 block">Descripción</span>
+                        <span class="text-purple-800">${variant.descripcion}</span>
+                    </div>
+                    ` : ''}
+
+                    <!-- Fecha de ingreso al final -->
+                    <div class="text-center text-xs text-gray-500 border-t pt-2">
+                        <i class="fas fa-calendar mr-1"></i>
+                        Fecha de Ingreso: ${fecha}
+                    </div>
+                </div>
+            `;
+
+            // Mostrar el contenido en el modal
+            document.getElementById('detalle-variante-content').innerHTML = detalleHTML;
+            
+            // Mostrar el modal
+            document.getElementById('modal-detalle-variante').classList.remove('hidden');
+            
+        } catch (error) {
+            console.error('Error al mostrar detalles de la variante:', error);
+            alert('Error al cargar los detalles de la variante');
         }
+    },
+
+    cerrarModalDetalle() {
+        document.getElementById('modal-detalle-variante').classList.add('hidden');
     },
 
     async deleteVariant(id) {
@@ -374,6 +520,84 @@ window.variantesModule = {
             console.error('Error deleting variant:', error);
             window.app.showToast('error', 'Error', 'Error al eliminar la variante');
         }
+    },
+
+    // Métodos de paginación
+    updatePaginationInfo() {
+        const { currentPage, itemsPerPage, totalItems, totalPages } = this.data.pagination;
+        
+        // Actualizar selector de items per page
+        const itemsPerPageSelect = document.getElementById('items-per-page-select');
+        if (itemsPerPageSelect) {
+            itemsPerPageSelect.value = itemsPerPage.toString();
+        }
+        
+        // Actualizar información de registros mostrados
+        const paginationInfo = document.getElementById('pagination-info');
+        if (paginationInfo && totalItems > 0) {
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+            paginationInfo.textContent = `Mostrando ${startItem} a ${endItem} de ${totalItems} registros`;
+        } else if (paginationInfo) {
+            paginationInfo.textContent = 'Mostrando 0 de 0 registros';
+        }
+        
+        // Actualizar información de página
+        const pageInfo = document.getElementById('page-info');
+        if (pageInfo) {
+            pageInfo.textContent = totalPages > 0 ? `Página ${currentPage} de ${totalPages}` : 'Página 0 de 0';
+        }
+        
+        // Actualizar botones de navegación
+        this.updateNavigationButtons();
+    },
+
+    updateNavigationButtons() {
+        const { currentPage, totalPages } = this.data.pagination;
+        
+        const firstBtn = document.getElementById('btn-first-page');
+        const prevBtn = document.getElementById('btn-prev-page');
+        const nextBtn = document.getElementById('btn-next-page');
+        const lastBtn = document.getElementById('btn-last-page');
+        
+        if (firstBtn) firstBtn.disabled = currentPage === 1;
+        if (prevBtn) prevBtn.disabled = currentPage === 1;
+        if (nextBtn) nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        if (lastBtn) lastBtn.disabled = currentPage === totalPages || totalPages === 0;
+    },
+
+    changeItemsPerPage(newSize) {
+        this.data.pagination.itemsPerPage = parseInt(newSize);
+        this.data.pagination.currentPage = 1;
+        this.data.pagination.totalPages = Math.ceil(this.data.pagination.totalItems / this.data.pagination.itemsPerPage);
+        this.renderTable();
+        this.updatePaginationInfo();
+    },
+
+    goToPage(page) {
+        const { totalPages } = this.data.pagination;
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        
+        this.data.pagination.currentPage = page;
+        this.renderTable();
+        this.updatePaginationInfo();
+    },
+
+    goToFirstPage() {
+        this.goToPage(1);
+    },
+
+    goToPrevPage() {
+        this.goToPage(this.data.pagination.currentPage - 1);
+    },
+
+    goToNextPage() {
+        this.goToPage(this.data.pagination.currentPage + 1);
+    },
+
+    goToLastPage() {
+        this.goToPage(this.data.pagination.totalPages);
     },
 
     getTemplate() {
@@ -402,6 +626,39 @@ window.variantesModule = {
                     <input type="text" id="variant-search" 
                            placeholder="Buscar variantes..." 
                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Controles de paginación -->
+            <div class="bg-white px-6 py-3 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-700">Mostrar</span>
+                        <select id="items-per-page-select" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-sm text-gray-700">registros</span>
+                        <span class="text-sm text-gray-700 ml-4" id="pagination-info">
+                            Mostrando 0 de 0 registros
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button id="btn-first-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="btn-prev-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="text-sm text-gray-700 mx-3" id="page-info">Página 1 de 1</span>
+                        <button id="btn-next-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="btn-last-page" class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -519,6 +776,30 @@ window.variantesModule = {
                     <button onclick="variantesModule.saveVariant()" 
                             class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
                         Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para ver detalles de la variante -->
+        <div id="modal-detalle-variante" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-gray-900">Detalles de la Variante</h3>
+                        <button onclick="window.variantesModule.cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="detalle-variante-content">
+                        <!-- El contenido se carga dinámicamente -->
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                    <button onclick="window.variantesModule.cerrarModalDetalle()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        Cerrar
                     </button>
                 </div>
             </div>

@@ -12,7 +12,7 @@ window.stockInventarioModule = {
         },
         pagination: {
             currentPage: 1,
-            itemsPerPage: 25,
+            itemsPerPage: 20,
             totalItems: 0,
             totalPages: 0
         },
@@ -274,15 +274,10 @@ window.stockInventarioModule = {
                                 <i class="fas fa-box text-gray-400"></i>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-900">${item.producto_descripcion || 'Sin nombre'}</p>
-                                <p class="text-sm text-gray-500">${item.material || 'Sin material'}</p>
+                                <p class="text-sm font-medium text-gray-900">${item.producto_descripcion || 'Sin nombre'}</p>
+                                <div class="text-sm text-gray-500">${item.codigo_variante || 'Sin código'} - ${item.medida || 'Sin medida'}</div>
                             </div>
                         </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            ${item.codigo_variante || 'Sin código'} - ${item.medida || 'Sin medida'}
-                        </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900">${item.categoria_nombre || 'Sin categoría'}</td>
                     <td class="px-6 py-4 text-sm text-gray-900" title="${ubicacionesTexto}">
@@ -301,22 +296,10 @@ window.stockInventarioModule = {
                         ${window.utils.formatCurrency(totalValue)}
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center justify-center">
                             <button onclick="stockInventarioModule.viewStockDetail('${item.variante_id}')" 
-                                    class="text-indigo-600 hover:text-indigo-700 p-1 rounded" title="Ver stock por ubicación">
+                                    class="text-indigo-600 hover:text-indigo-700 p-2 rounded-lg hover:bg-indigo-50" title="Ver stock por ubicación">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button onclick="stockInventarioModule.editItem('${item.variante_id}')" 
-                                    class="text-blue-600 hover:text-blue-700 p-1 rounded" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="stockInventarioModule.viewMovements('${item.variante_id}')" 
-                                    class="text-green-600 hover:text-green-700 p-1 rounded" title="Ver historial">
-                                <i class="fas fa-history"></i>
-                            </button>
-                            <button onclick="stockInventarioModule.adjustStock('${item.variante_id}')" 
-                                    class="text-yellow-600 hover:text-yellow-700 p-1 rounded" title="Ajustar stock">
-                                <i class="fas fa-adjust"></i>
                             </button>
                         </div>
                     </td>
@@ -331,63 +314,61 @@ window.stockInventarioModule = {
 
     updatePagination() {
         const paginationContainer = document.getElementById('pagination-container');
-        if (!paginationContainer) return;
-
-        const { currentPage, totalPages } = this.data.pagination;
+        const paginationInfoTop = document.getElementById('pagination-info-top');
+        const pageInfoTop = document.getElementById('page-info-top');
+        const navigationControlsTop = document.getElementById('navigation-controls-top');
         
-        if (totalPages <= 1) {
+        const { currentPage, totalPages, totalItems, itemsPerPage } = this.data.pagination;
+        
+        // Actualizar información en la parte superior
+        if (paginationInfoTop) {
+            if (totalItems === 0) {
+                paginationInfoTop.textContent = 'Mostrando 0 de 0 registros';
+            } else {
+                const startItem = (currentPage - 1) * itemsPerPage + 1;
+                const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                paginationInfoTop.textContent = `Mostrando ${startItem} a ${endItem} de ${totalItems} registros`;
+            }
+        }
+        
+        // Actualizar información de página en la parte superior (siempre visible)
+        if (pageInfoTop) {
+            pageInfoTop.textContent = totalPages > 0 ? `Página ${currentPage} de ${totalPages}` : 'Página 0 de 0';
+        }
+        
+        // Mostrar siempre los controles de navegación (consistente con otros módulos)
+        const paginationNavigationContainer = document.getElementById('pagination-navigation-container');
+        const firstBtnTop = document.getElementById('btn-first-page-top');
+        const prevBtnTop = document.getElementById('btn-prev-page-top');
+        const nextBtnTop = document.getElementById('btn-next-page-top');
+        const lastBtnTop = document.getElementById('btn-last-page-top');
+        
+        if (paginationNavigationContainer) {
+            paginationNavigationContainer.style.display = 'flex';
+            
+            // Siempre mostrar botones pero con estados apropiados
+            if (firstBtnTop) {
+                firstBtnTop.style.display = 'inline-block';
+                firstBtnTop.disabled = currentPage === 1 || totalPages <= 1;
+            }
+            if (prevBtnTop) {
+                prevBtnTop.style.display = 'inline-block';
+                prevBtnTop.disabled = currentPage === 1 || totalPages <= 1;
+            }
+            if (nextBtnTop) {
+                nextBtnTop.style.display = 'inline-block';
+                nextBtnTop.disabled = currentPage === totalPages || totalPages <= 1;
+            }
+            if (lastBtnTop) {
+                lastBtnTop.style.display = 'inline-block';
+                lastBtnTop.disabled = currentPage === totalPages || totalPages <= 1;
+            }
+        }
+        
+        // Limpiar la paginación inferior (ya no es necesaria)
+        if (paginationContainer) {
             paginationContainer.innerHTML = '';
-            return;
         }
-
-        const startPage = Math.max(1, currentPage - 2);
-        const endPage = Math.min(totalPages, currentPage + 2);
-        const pages = [];
-
-        // Previous button
-        pages.push(`
-            <button onclick="stockInventarioModule.goToPage(${currentPage - 1})"
-                    class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}"
-                    ${currentPage === 1 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `);
-
-        // Page numbers
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(`
-                <button onclick="stockInventarioModule.goToPage(${i})"
-                        class="relative inline-flex items-center px-4 py-2 text-sm font-medium border ${
-                            i === currentPage 
-                                ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' 
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }">
-                    ${i}
-                </button>
-            `);
-        }
-
-        // Next button
-        pages.push(`
-            <button onclick="stockInventarioModule.goToPage(${currentPage + 1})"
-                    class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}"
-                    ${currentPage === totalPages ? 'disabled' : ''}>
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `);
-
-        paginationContainer.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-700">
-                        Mostrando ${(currentPage - 1) * this.data.pagination.itemsPerPage + 1} a 
-                        ${Math.min(currentPage * this.data.pagination.itemsPerPage, this.data.pagination.totalItems)} de 
-                        ${this.data.pagination.totalItems} resultados
-                    </span>
-                </div>
-                <div class="flex">${pages.join('')}</div>
-            </div>
-        `;
     },
 
     updateSummary() {
@@ -431,6 +412,29 @@ window.stockInventarioModule = {
             this.data.pagination.currentPage = page;
             this.updateTable();
         }
+    },
+
+    changeItemsPerPage(newSize) {
+        this.data.pagination.itemsPerPage = parseInt(newSize);
+        this.data.pagination.currentPage = 1;
+        this.data.pagination.totalPages = Math.ceil(this.data.pagination.totalItems / this.data.pagination.itemsPerPage);
+        this.updateTable();
+    },
+
+    goToPrevPage() {
+        if (this.data.pagination.currentPage > 1) {
+            this.goToPage(this.data.pagination.currentPage - 1);
+        }
+    },
+
+    goToNextPage() {
+        if (this.data.pagination.currentPage < this.data.pagination.totalPages) {
+            this.goToPage(this.data.pagination.currentPage + 1);
+        }
+    },
+
+    goToLastPage() {
+        this.goToPage(this.data.pagination.totalPages);
     },
 
     toggleSelectAll(checked) {
@@ -749,16 +753,43 @@ window.stockInventarioModule = {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <!-- Table Controls -->
                 <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                    <!-- Controles izquierdos -->
                     <div class="flex items-center space-x-4">
                         <label class="flex items-center space-x-2 text-sm">
                             <span class="text-gray-700">Mostrar:</span>
                             <select id="items-per-page" class="border border-gray-300 rounded px-2 py-1 text-sm">
-                                <option value="25">25</option>
+                                <option value="20">20</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
                             <span class="text-gray-700">por página</span>
                         </label>
+                        <span class="text-sm text-gray-700" id="pagination-info-top">
+                            Mostrando 0 de 0 registros
+                        </span>
+                    </div>
+                    
+                    <!-- Controles derechos -->
+                    <div class="flex items-center space-x-1" id="pagination-navigation-container">
+                        <button id="btn-first-page-top" onclick="stockInventarioModule.goToPage(1)" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="btn-prev-page-top" onclick="stockInventarioModule.goToPrevPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="text-sm text-gray-700 mx-3" id="page-info-top">
+                            Página 1 de 1
+                        </span>
+                        <button id="btn-next-page-top" onclick="stockInventarioModule.goToNextPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="btn-last-page-top" onclick="stockInventarioModule.goToLastPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -773,12 +804,9 @@ window.stockInventarioModule = {
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                     onclick="stockInventarioModule.sortBy('nombre')">
                                     <div class="flex items-center space-x-1">
-                                        <span>Producto</span>
+                                        <span>Producto / Variante</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Variante
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                     onclick="stockInventarioModule.sortBy('categoria')">
