@@ -1043,7 +1043,7 @@ window.movimientosModule = {
                                 </div>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
-                                    <div class="text-sm text-gray-500 mt-0.5">
+                                    <div class="text-xs text-gray-500 mt-0.5">
                                         Stock no disponible
                                     </div>
                                 </div>
@@ -1103,7 +1103,7 @@ window.movimientosModule = {
                             </div>
                             <div class="flex-1">
                                 <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
-                                <div class="text-sm ${stock > 0 ? 'text-green-600' : 'text-red-500'} mt-0.5">
+                                <div class="text-xs ${stock > 0 ? 'text-green-600' : 'text-red-500'} mt-0.5">
                                     ${stock > 0 ? `${stock} unidades disponibles` : 'Sin stock disponible'}
                                 </div>
                             </div>
@@ -1142,7 +1142,7 @@ window.movimientosModule = {
                     </div>
                     <div class="flex-1">
                         <div class="font-medium text-gray-900">${ubicacionNombre}</div>
-                        <div class="text-sm ${stock > 0 ? 'text-green-600' : 'text-gray-500'} mt-0.5">
+                        <div class="text-xs ${stock > 0 ? 'text-green-600' : 'text-gray-500'} mt-0.5">
                             ${stock > 0 ? `${stock} unidades disponibles` : (stock === 0 ? 'Stock no disponible' : 'Sin stock disponible')}
                         </div>
                     </div>
