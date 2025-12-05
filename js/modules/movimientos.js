@@ -652,12 +652,18 @@ window.movimientosModule = {
     bindEvents() {
         // Botón nuevo movimiento
         document.getElementById('btn-new-movimiento').onclick = () => {
+            console.log('🚀 Abriendo modal nuevo movimiento');
             this.showModal = true;
             document.getElementById('modal-nuevo-movimiento').classList.remove('hidden');
             // Cargar motivos por defecto para "entrada" cuando se abre el modal
             this.loadMotivos('entrada');
-            // Inicializar dropdown de ubicaciones sin variante seleccionada
-            this.updateUbicacionesWithStock(null);
+            
+            // Esperar un momento para asegurar que el modal esté renderizado
+            setTimeout(() => {
+                console.log('🏢 Inicializando dropdown de ubicaciones, ubicaciones disponibles:', this.ubicaciones?.length);
+                this.updateUbicacionesWithStock(null);
+                this.setupUbicacionDropdownEvents();
+            }, 100);
         };
 
         // Cerrar modal
@@ -741,19 +747,7 @@ window.movimientosModule = {
             
 
 
-        // Evento para el selector de ubicaciones personalizado
-        const ubicacionSelector = document.getElementById('ubicacion-selector');
-        if (ubicacionSelector) {
-            ubicacionSelector.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dropdown = document.getElementById('ubicacion-dropdown');
-                if (dropdown && dropdown.classList.contains('hidden')) {
-                    this.showUbicacionDropdown();
-                } else {
-                    this.hideUbicacionDropdown();
-                }
-            });
-        }
+        // Los eventos del dropdown de ubicaciones se configuran cuando se abre el modal
         
         // Cerrar dropdowns al hacer clic fuera
         document.addEventListener('click', (e) => {
@@ -763,9 +757,7 @@ window.movimientosModule = {
             if (!e.target.closest('#input-variante-search') && !e.target.closest('#variante-dropdown')) {
                 this.hideVarianteDropdown();
             }
-            if (!e.target.closest('#ubicacion-selector') && !e.target.closest('#ubicacion-dropdown')) {
-                this.hideUbicacionDropdown();
-            }
+            // El dropdown de ubicaciones se maneja dinámicamente cuando se abre el modal
 
             
             // Cerrar modal de detalles al hacer clic fuera
@@ -1022,9 +1014,17 @@ window.movimientosModule = {
     },
 
     async updateUbicacionesWithStock(varianteId) {
+        console.log('🔄 updateUbicacionesWithStock llamado con varianteId:', varianteId);
         const dropdown = document.getElementById('ubicacion-dropdown');
         const selectedText = document.getElementById('ubicacion-selected-text');
         const ubicacionInput = document.getElementById('select-ubicacion');
+        
+        console.log('🎯 Elementos encontrados:', {
+            dropdown: !!dropdown,
+            selectedText: !!selectedText,
+            ubicacionInput: !!ubicacionInput,
+            ubicacionesCount: this.ubicaciones?.length || 0
+        });
         
         if (!varianteId) {
             // Si no hay variante seleccionada, mostrar todas las ubicaciones sin información de stock
@@ -1185,6 +1185,47 @@ window.movimientosModule = {
         }
         if (chevron) {
             chevron.classList.remove('rotate-180');
+        }
+    },
+    
+    setupUbicacionDropdownEvents() {
+        // Configurar eventos del selector de ubicaciones personalizado
+        const ubicacionSelector = document.getElementById('ubicacion-selector');
+        console.log('🎯 Configurando evento para ubicacion-selector, elemento encontrado:', !!ubicacionSelector);
+        
+        if (ubicacionSelector) {
+            // Remover listeners previos si existen
+            ubicacionSelector.replaceWith(ubicacionSelector.cloneNode(true));
+            const newSelector = document.getElementById('ubicacion-selector');
+            
+            newSelector.addEventListener('click', (e) => {
+                console.log('👆 Click en selector de ubicaciones');
+                e.stopPropagation();
+                const dropdown = document.getElementById('ubicacion-dropdown');
+                console.log('📋 Estado dropdown:', {
+                    exists: !!dropdown,
+                    isHidden: dropdown?.classList.contains('hidden'),
+                    innerHTML: dropdown?.innerHTML?.length || 0
+                });
+                if (dropdown && dropdown.classList.contains('hidden')) {
+                    console.log('📂 Mostrando dropdown');
+                    this.showUbicacionDropdown();
+                } else {
+                    console.log('📁 Ocultando dropdown');
+                    this.hideUbicacionDropdown();
+                }
+            });
+            
+            // Agregar listener global para cerrar dropdown al hacer clic afuera
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#ubicacion-selector') && !e.target.closest('#ubicacion-dropdown')) {
+                    this.hideUbicacionDropdown();
+                }
+            });
+            
+            console.log('✅ Eventos del dropdown configurados correctamente');
+        } else {
+            console.error('❌ No se encontró el elemento ubicacion-selector');
         }
     },
     
