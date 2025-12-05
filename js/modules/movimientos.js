@@ -294,9 +294,19 @@ window.movimientosModule = {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Ubicación *</label>
-                                <select id="select-ubicacion" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                                    <option value="">Seleccionar ubicación...</option>
-                                </select>
+                                <div class="relative">
+                                    <div id="ubicacion-selector" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white cursor-pointer flex items-center justify-between hover:border-blue-400 transition-colors min-h-[42px]">
+                                        <span id="ubicacion-selected-text" class="text-gray-500 flex-1">Seleccionar ubicación...</span>
+                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="ubicacion-chevron"></i>
+                                    </div>
+                                    <div id="ubicacion-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto hidden">
+                                        <div class="p-3 text-sm text-gray-500 border-b bg-gray-50 flex items-center">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Selecciona una variante para ver el stock disponible
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="select-ubicacion" name="ubicacion">
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
@@ -727,6 +737,20 @@ window.movimientosModule = {
             };
         }
             
+        // Evento para el selector de ubicaciones personalizado
+        const ubicacionSelector = document.getElementById('ubicacion-selector');
+        if (ubicacionSelector) {
+            ubicacionSelector.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const dropdown = document.getElementById('ubicacion-dropdown');
+                if (dropdown && dropdown.classList.contains('hidden')) {
+                    this.showUbicacionDropdown();
+                } else {
+                    this.hideUbicacionDropdown();
+                }
+            });
+        }
+
         // Cerrar dropdowns al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#input-producto-search') && !e.target.closest('#producto-dropdown')) {
@@ -734,6 +758,9 @@ window.movimientosModule = {
             }
             if (!e.target.closest('#input-variante-search') && !e.target.closest('#variante-dropdown')) {
                 this.hideVarianteDropdown();
+            }
+            if (!e.target.closest('#ubicacion-selector') && !e.target.closest('#ubicacion-dropdown')) {
+                this.hideUbicacionDropdown();
             }
             
             // Cerrar modal de detalles al hacer clic fuera
@@ -983,6 +1010,223 @@ window.movimientosModule = {
             searchInput.value = varianteDescription;
             hiddenInput.value = varianteId;
             this.hideVarianteDropdown();
+            
+            // Actualizar selector de ubicaciones con stock disponible
+            this.updateUbicacionesWithStock(varianteId);
+        }
+    },
+
+    async updateUbicacionesWithStock(varianteId) {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        const selectedText = document.getElementById('ubicacion-selected-text');
+        const hiddenInput = document.getElementById('select-ubicacion');
+        
+        if (!varianteId) {
+            // Si no hay variante seleccionada, mostrar mensaje informativo
+            if (dropdown) {
+                dropdown.innerHTML = `
+                    <div class="p-4 text-center bg-blue-50 border-b">
+                        <i class="fas fa-info-circle text-blue-500 text-lg mb-2"></i>
+                        <p class="text-sm text-blue-700 font-medium">Selecciona una variante</p>
+                        <p class="text-xs text-blue-600">para ver el stock disponible por ubicación</p>
+                    </div>
+                `;
+            }
+            if (selectedText) {
+                selectedText.textContent = 'Seleccionar ubicación...';
+                selectedText.className = 'text-gray-500';
+            }
+            if (hiddenInput) hiddenInput.value = '';
+            return;
+        }
+
+        try {
+            // Obtener stock por ubicación para la variante seleccionada
+            const response = await fetch(`http://localhost:3001/api/stockinventario?variante_id=${varianteId}`);
+            const data = await response.json();
+
+            if (!dropdown) return;
+
+            // Crear mapa de stock por ubicación
+            const stockPorUbicacion = {};
+            if (data.success && data.data) {
+                data.data.forEach(item => {
+                    if (item.ubicaciones) {
+                        item.ubicaciones.forEach(ub => {
+                            stockPorUbicacion[ub.ubicacion_id] = ub.stock_disponible || 0;
+                        });
+                    }
+                });
+            }
+
+            // Poblar dropdown con ubicaciones y badges de stock mejorados
+            let dropdownHTML = `
+                <div class="p-3 bg-gray-50 border-b">
+                    <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                        <i class="fas fa-warehouse mr-2"></i>Stock por Ubicación
+                    </p>
+                </div>
+            `;
+            
+            this.ubicaciones.forEach(ubicacion => {
+                const stock = stockPorUbicacion[ubicacion.id] || 0;
+                let stockBadge, stockClass, stockIcon, hoverClass, pulseClass;
+                
+                if (stock > 0) {
+                    if (stock >= 20) {
+                        stockClass = 'bg-emerald-500 text-white shadow-emerald-200';
+                        stockIcon = 'fas fa-check-circle';
+                        hoverClass = 'hover:bg-emerald-50';
+                        pulseClass = '';
+                    } else if (stock >= 10) {
+                        stockClass = 'bg-green-500 text-white shadow-green-200';
+                        stockIcon = 'fas fa-check-circle';
+                        hoverClass = 'hover:bg-green-50';
+                        pulseClass = '';
+                    } else if (stock >= 5) {
+                        stockClass = 'bg-yellow-500 text-white shadow-yellow-200';
+                        stockIcon = 'fas fa-exclamation-triangle';
+                        hoverClass = 'hover:bg-yellow-50';
+                        pulseClass = '';
+                    } else {
+                        stockClass = 'bg-orange-500 text-white shadow-orange-200';
+                        stockIcon = 'fas fa-exclamation-triangle';
+                        hoverClass = 'hover:bg-orange-50';
+                        pulseClass = 'animate-pulse';
+                    }
+                } else {
+                    stockClass = 'bg-red-500 text-white shadow-red-200';
+                    stockIcon = 'fas fa-times-circle';
+                    hoverClass = 'hover:bg-red-50';
+                    pulseClass = 'animate-pulse';
+                }
+                
+                stockBadge = `
+                    <div class="relative">
+                        <div class="w-12 h-12 ${stockClass} rounded-full shadow-lg flex items-center justify-center ${pulseClass}">
+                            <span class="text-sm font-bold">${stock}</span>
+                        </div>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                            <i class="${stockIcon} text-xs ${stock > 0 ? 'text-green-500' : 'text-red-500'}"></i>
+                        </div>
+                    </div>
+                `;
+                
+                dropdownHTML += `
+                    <div class="px-4 py-3 ${hoverClass} cursor-pointer border-b border-gray-100 last:border-b-0 transition-all duration-200 hover:shadow-sm" 
+                         onclick="movimientosModule.selectUbicacion(${ubicacion.id}, '${ubicacion.nombre}', ${stock})">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                    <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-gray-900 text-sm">${ubicacion.nombre}</div>
+                                    <div class="text-xs text-gray-500 flex items-center mt-1">
+                                        <i class="fas fa-boxes mr-1"></i>
+                                        ${stock > 0 ? `${stock} unidades disponibles` : 'Sin stock disponible'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                ${stockBadge}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            dropdown.innerHTML = dropdownHTML;
+
+        } catch (error) {
+            console.error('Error al cargar stock por ubicación:', error);
+            // En caso de error, mostrar ubicaciones sin información de stock
+            if (dropdown) {
+                dropdown.innerHTML = `
+                    <div class="p-4 text-center bg-red-50 border-b">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-lg mb-2"></i>
+                        <p class="text-sm text-red-700 font-medium">Error al cargar el stock</p>
+                        <p class="text-xs text-red-600">Inténtalo de nuevo más tarde</p>
+                    </div>
+                `;
+            }
+        }
+    },
+
+    selectUbicacion(ubicacionId, ubicacionNombre, stock) {
+        const selectedText = document.getElementById('ubicacion-selected-text');
+        const hiddenInput = document.getElementById('select-ubicacion');
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        
+        if (selectedText && hiddenInput) {
+            // Crear badge circular de stock con mejor diseño
+            let stockBadge, stockClass, pulseClass;
+            if (stock > 0) {
+                if (stock >= 20) {
+                    stockClass = 'bg-emerald-500 text-white shadow-emerald-200';
+                    pulseClass = '';
+                } else if (stock >= 10) {
+                    stockClass = 'bg-green-500 text-white shadow-green-200';
+                    pulseClass = '';
+                } else if (stock >= 5) {
+                    stockClass = 'bg-yellow-500 text-white shadow-yellow-200';
+                    pulseClass = '';
+                } else {
+                    stockClass = 'bg-orange-500 text-white shadow-orange-200';
+                    pulseClass = 'animate-pulse';
+                }
+            } else {
+                stockClass = 'bg-red-500 text-white shadow-red-200';
+                pulseClass = 'animate-pulse';
+            }
+            
+            stockBadge = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-gray-500">${stock > 0 ? `${stock} disponibles` : 'Sin stock'}</span>
+                    <div class="w-8 h-8 ${stockClass} rounded-full shadow-md flex items-center justify-center ${pulseClass}">
+                        <span class="text-xs font-bold">${stock}</span>
+                    </div>
+                </div>
+            `;
+            
+            selectedText.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-white text-xs"></i>
+                        </div>
+                        <span class="text-gray-900 font-medium">${ubicacionNombre}</span>
+                    </div>
+                    ${stockBadge}
+                </div>
+            `;
+            selectedText.className = 'text-gray-900 flex-1';
+            hiddenInput.value = ubicacionId;
+        }
+        
+        // Ocultar dropdown con animación
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+        
+        // Rotar chevron de vuelta
+        const chevron = document.getElementById('ubicacion-chevron');
+        if (chevron) {
+            chevron.classList.remove('rotate-180');
+        }
+    },
+    
+    hideUbicacionDropdown() {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+    },
+    
+    showUbicacionDropdown() {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        if (dropdown) {
+            dropdown.classList.remove('hidden');
         }
     },
 
@@ -992,6 +1236,8 @@ window.movimientosModule = {
             dropdown.classList.add('hidden');
         }
     },
+    
+
 
     selectProduct(productId, productDescription) {
         // Actualizar el input y el campo oculto
@@ -1033,6 +1279,20 @@ window.movimientosModule = {
                 selectVariante.value = '';
             }
             this.hideVarianteDropdown();
+        }
+        
+        // Resetear selector de ubicaciones al cambiar producto
+        const selectedUbicacionText = document.getElementById('ubicacion-selected-text');
+        const ubicacionInput = document.getElementById('select-ubicacion');
+        const ubicacionDropdown = document.getElementById('ubicacion-dropdown');
+        
+        if (selectedUbicacionText) {
+            selectedUbicacionText.textContent = 'Seleccionar ubicación...';
+            selectedUbicacionText.className = 'text-gray-500';
+        }
+        if (ubicacionInput) ubicacionInput.value = '';
+        if (ubicacionDropdown) {
+            ubicacionDropdown.innerHTML = '<div class="p-2 text-sm text-gray-500 border-b">Selecciona una variante para ver el stock disponible</div>';
         }
     },
 
@@ -1275,6 +1535,21 @@ window.movimientosModule = {
         }
         this.hideVarianteDropdown();
         this.variantesDelProducto = [];
+        
+        // Resetear selector de ubicaciones al estado normal
+        const selectedText = document.getElementById('ubicacion-selected-text');
+        const ubicacionHiddenInput = document.getElementById('select-ubicacion');
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        
+        if (selectedText) {
+            selectedText.textContent = 'Seleccionar ubicación...';
+            selectedText.className = 'text-gray-500';
+        }
+        if (ubicacionHiddenInput) ubicacionHiddenInput.value = '';
+        if (dropdown) {
+            dropdown.innerHTML = '<div class="p-2 text-sm text-gray-500 border-b">Selecciona una variante para ver el stock disponible</div>';
+        }
+        this.hideUbicacionDropdown();
     },
 
     filtrarMovimientos() {

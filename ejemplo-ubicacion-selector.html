@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Selector de Ubicaciones con Stock - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">
+            <i class="fas fa-warehouse mr-3 text-blue-600"></i>
+            Nuevo Selector de Ubicaciones con Stock
+        </h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Ejemplo de Implementación:</h2>
+            
+            <!-- Selector de Ubicación Mejorado -->
+            <div class="relative mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Ubicación *
+                </label>
+                <div class="relative">
+                    <div id="ubicacion-selector" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white cursor-pointer flex items-center justify-between hover:border-blue-400 transition-colors min-h-[42px]">
+                        <span id="ubicacion-selected-text" class="text-gray-500 flex-1">Seleccionar ubicación...</span>
+                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="ubicacion-chevron"></i>
+                    </div>
+                    <div id="ubicacion-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto hidden">
+                        <!-- Encabezado -->
+                        <div class="p-3 bg-gray-50 border-b">
+                            <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                <i class="fas fa-warehouse mr-2"></i>Stock por Ubicación
+                            </p>
+                        </div>
+                        
+                        <!-- Ubicación 1: Stock Alto -->
+                        <div class="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:shadow-sm" onclick="selectExample(1, 'Bodega Central', 25)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                        <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 text-sm">Bodega Central</div>
+                                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                                            <i class="fas fa-boxes mr-1"></i>
+                                            25 unidades disponibles
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-emerald-500 text-white shadow-emerald-200 rounded-full shadow-lg flex items-center justify-center">
+                                            <span class="text-sm font-bold">25</span>
+                                        </div>
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-check-circle text-xs text-green-500"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ubicación 2: Stock Medio -->
+                        <div class="px-4 py-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:shadow-sm" onclick="selectExample(2, 'Almacén Norte', 12)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                        <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 text-sm">Almacén Norte</div>
+                                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                                            <i class="fas fa-boxes mr-1"></i>
+                                            12 unidades disponibles
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-green-500 text-white shadow-green-200 rounded-full shadow-lg flex items-center justify-center">
+                                            <span class="text-sm font-bold">12</span>
+                                        </div>
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-check-circle text-xs text-green-500"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ubicación 3: Stock Bajo -->
+                        <div class="px-4 py-3 hover:bg-yellow-50 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:shadow-sm" onclick="selectExample(3, 'Depósito Sur', 7)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                        <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 text-sm">Depósito Sur</div>
+                                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                                            <i class="fas fa-boxes mr-1"></i>
+                                            7 unidades disponibles
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-yellow-500 text-white shadow-yellow-200 rounded-full shadow-lg flex items-center justify-center">
+                                            <span class="text-sm font-bold">7</span>
+                                        </div>
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-exclamation-triangle text-xs text-yellow-600"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ubicación 4: Stock Crítico -->
+                        <div class="px-4 py-3 hover:bg-orange-50 cursor-pointer border-b border-gray-100 transition-all duration-200 hover:shadow-sm" onclick="selectExample(4, 'Punto de Venta', 2)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                        <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 text-sm">Punto de Venta</div>
+                                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                                            <i class="fas fa-boxes mr-1"></i>
+                                            2 unidades disponibles
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-orange-500 text-white shadow-orange-200 rounded-full shadow-lg flex items-center justify-center animate-pulse">
+                                            <span class="text-sm font-bold">2</span>
+                                        </div>
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-exclamation-triangle text-xs text-orange-600"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ubicación 5: Sin Stock -->
+                        <div class="px-4 py-3 hover:bg-red-50 cursor-pointer transition-all duration-200 hover:shadow-sm" onclick="selectExample(5, 'Almacén Temporal', 0)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                                        <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-semibold text-gray-900 text-sm">Almacén Temporal</div>
+                                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                                            <i class="fas fa-boxes mr-1"></i>
+                                            Sin stock disponible
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="relative">
+                                        <div class="w-12 h-12 bg-red-500 text-white shadow-red-200 rounded-full shadow-lg flex items-center justify-center animate-pulse">
+                                            <span class="text-sm font-bold">0</span>
+                                        </div>
+                                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                            <i class="fas fa-times-circle text-xs text-red-500"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información sobre los colores -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>Código de Colores del Stock:
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-emerald-500 rounded-full"></div>
+                        <span>≥20 unidades - Stock excelente</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                        <span>10-19 unidades - Stock bueno</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                        <span>5-9 unidades - Stock medio</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-orange-500 rounded-full animate-pulse"></div>
+                        <span>1-4 unidades - Stock crítico</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                        <span>0 unidades - Sin stock</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funcionalidad del dropdown
+        document.getElementById('ubicacion-selector').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('ubicacion-dropdown');
+            const chevron = document.getElementById('ubicacion-chevron');
+            
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                dropdown.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        });
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#ubicacion-selector') && !e.target.closest('#ubicacion-dropdown')) {
+                document.getElementById('ubicacion-dropdown').classList.add('hidden');
+                document.getElementById('ubicacion-chevron').classList.remove('rotate-180');
+            }
+        });
+
+        // Función para seleccionar una ubicación
+        function selectExample(id, nombre, stock) {
+            const selectedText = document.getElementById('ubicacion-selected-text');
+            const dropdown = document.getElementById('ubicacion-dropdown');
+            const chevron = document.getElementById('ubicacion-chevron');
+            
+            // Crear badge circular de stock
+            let stockClass, pulseClass;
+            if (stock >= 20) {
+                stockClass = 'bg-emerald-500 text-white shadow-emerald-200';
+                pulseClass = '';
+            } else if (stock >= 10) {
+                stockClass = 'bg-green-500 text-white shadow-green-200';
+                pulseClass = '';
+            } else if (stock >= 5) {
+                stockClass = 'bg-yellow-500 text-white shadow-yellow-200';
+                pulseClass = '';
+            } else if (stock > 0) {
+                stockClass = 'bg-orange-500 text-white shadow-orange-200';
+                pulseClass = 'animate-pulse';
+            } else {
+                stockClass = 'bg-red-500 text-white shadow-red-200';
+                pulseClass = 'animate-pulse';
+            }
+            
+            const stockBadge = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-gray-500">${stock > 0 ? stock + ' disponibles' : 'Sin stock'}</span>
+                    <div class="w-8 h-8 ${stockClass} rounded-full shadow-md flex items-center justify-center ${pulseClass}">
+                        <span class="text-xs font-bold">${stock}</span>
+                    </div>
+                </div>
+            `;
+            
+            selectedText.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-white text-xs"></i>
+                        </div>
+                        <span class="text-gray-900 font-medium">${nombre}</span>
+                    </div>
+                    ${stockBadge}
+                </div>
+            `;
+            selectedText.className = 'text-gray-900 flex-1';
+            
+            // Ocultar dropdown
+            dropdown.classList.add('hidden');
+            chevron.classList.remove('rotate-180');
+        }
+    </script>
+</body>
+</html>
