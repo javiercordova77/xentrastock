@@ -18,7 +18,7 @@ window.productosModule = {
         container.innerHTML = this.getTemplate();
         
         await this.loadData();
-        this.attachEventListeners();bnh
+        this.attachEventListeners();
         this.renderTable();
     },
 
