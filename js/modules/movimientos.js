@@ -656,6 +656,8 @@ window.movimientosModule = {
             document.getElementById('modal-nuevo-movimiento').classList.remove('hidden');
             // Cargar motivos por defecto para "entrada" cuando se abre el modal
             this.loadMotivos('entrada');
+            // Inicializar dropdown de ubicaciones sin variante seleccionada
+            this.updateUbicacionesWithStock(null);
         };
 
         // Cerrar modal
@@ -1025,14 +1027,37 @@ window.movimientosModule = {
         const ubicacionInput = document.getElementById('select-ubicacion');
         
         if (!varianteId) {
-            // Si no hay variante seleccionada, mostrar mensaje informativo
+            // Si no hay variante seleccionada, mostrar todas las ubicaciones sin información de stock
             if (dropdown) {
-                dropdown.innerHTML = `
-                    <div class="p-3 text-sm text-blue-700 border-b bg-blue-50 flex items-center">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Selecciona una variante para ver el stock disponible
+                let dropdownHTML = `
+                    <div class="p-3 bg-blue-50 border-b">
+                        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center">
+                            <i class="fas fa-warehouse mr-2"></i>Ubicaciones Disponibles
+                        </p>
+                        <p class="text-xs text-blue-600 mt-1">Selecciona una variante para ver el stock</p>
                     </div>
                 `;
+                
+                this.ubicaciones.forEach(ubicacion => {
+                    dropdownHTML += `
+                        <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200" 
+                             onclick="movimientosModule.selectUbicacion(${ubicacion.id}, '${ubicacion.nombre}', 0)">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
+                                    <div class="text-sm text-gray-500 mt-0.5">
+                                        Stock no disponible
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                dropdown.innerHTML = dropdownHTML;
             }
             if (selectedText) {
                 selectedText.textContent = 'Seleccionar ubicación...';
@@ -1122,26 +1147,17 @@ window.movimientosModule = {
                     </div>
                     <div class="flex-1">
                         <div class="font-medium text-gray-900">${ubicacionNombre}</div>
-                        <div class="text-sm ${stock > 0 ? 'text-green-600' : 'text-red-500'} mt-0.5">
-                            ${stock > 0 ? `${stock} unidades disponibles` : 'Sin stock disponible'}
+                        <div class="text-sm ${stock > 0 ? 'text-green-600' : 'text-gray-500'} mt-0.5">
+                            ${stock > 0 ? `${stock} unidades disponibles` : (stock === 0 ? 'Stock no disponible' : 'Sin stock disponible')}
                         </div>
                     </div>
                 </div>
             `;
             selectedText.className = 'text-gray-900 flex-1';
-            hiddenInput.value = ubicacionId;
+            ubicacionHidden.value = ubicacionId;
         }
         
-        // Ocultar dropdown con animación
-        if (dropdown) {
-            dropdown.classList.add('hidden');
-        }
-        
-        // Rotar chevron de vuelta
-        const chevron = document.getElementById('ubicacion-chevron');
-        if (chevron) {
-            chevron.classList.remove('rotate-180');
-        }
+        this.hideUbicacionDropdown();
     },
     hideVarianteDropdown() {
         const dropdown = document.getElementById('variante-dropdown');
