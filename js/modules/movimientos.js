@@ -418,18 +418,18 @@ window.movimientosModule = {
         // Inicializar búsqueda de productos (no necesita llenar opciones inicialmente)
         this.setupProductSearch();
 
-        // Ubicaciones
-        const selectUbicacion = document.getElementById('select-ubicacion');
+        // Ubicaciones para filtros (solo el select de filtro, no el del formulario)
         const filterUbicacion = document.getElementById('filter-ubicacion');
         
-        selectUbicacion.innerHTML = '<option value="">Seleccionar ubicación...</option>';
-        filterUbicacion.innerHTML = '<option value="">Todas las ubicaciones</option>';
+        if (filterUbicacion) {
+            filterUbicacion.innerHTML = '<option value="">Todas las ubicaciones</option>';
+            this.ubicaciones.forEach(ubicacion => {
+                const option = `<option value="${ubicacion.id}">${ubicacion.nombre}</option>`;
+                filterUbicacion.innerHTML += option;
+            });
+        }
         
-        this.ubicaciones.forEach(ubicacion => {
-            const option = `<option value="${ubicacion.id}">${ubicacion.nombre}</option>`;
-            selectUbicacion.innerHTML += option;
-            filterUbicacion.innerHTML += option;
-        });
+        console.log('📍 Ubicaciones cargadas:', this.ubicaciones?.length || 0);
     },
 
     async loadMotivos(tipo) {
@@ -743,7 +743,13 @@ window.movimientosModule = {
             ubicacionSelector.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const dropdown = document.getElementById('ubicacion-dropdown');
+                const varianteId = document.getElementById('select-variante')?.value;
+                
                 if (dropdown && dropdown.classList.contains('hidden')) {
+                    // Si no hay variante seleccionada, mostrar ubicaciones básicas
+                    if (!varianteId) {
+                        this.mostrarUbicacionesBasicas();
+                    }
                     this.showUbicacionDropdown();
                 } else {
                     this.hideUbicacionDropdown();
@@ -1162,6 +1168,82 @@ window.movimientosModule = {
         if (dropdown) {
             dropdown.classList.add('hidden');
         }
+    },
+    
+    showUbicacionDropdown() {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        const chevron = document.getElementById('ubicacion-chevron');
+        if (dropdown) {
+            dropdown.classList.remove('hidden');
+        }
+        if (chevron) {
+            chevron.classList.add('rotate-180');
+        }
+    },
+    
+    hideUbicacionDropdown() {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        const chevron = document.getElementById('ubicacion-chevron');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+        if (chevron) {
+            chevron.classList.remove('rotate-180');
+        }
+    },
+    
+    mostrarUbicacionesBasicas() {
+        const dropdown = document.getElementById('ubicacion-dropdown');
+        if (!dropdown || !this.ubicaciones || this.ubicaciones.length === 0) return;
+        
+        let dropdownHTML = `
+            <div class="p-3 bg-blue-50 border-b">
+                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center">
+                    <i class="fas fa-warehouse mr-2"></i>Ubicaciones Disponibles
+                </p>
+            </div>
+        `;
+        
+        this.ubicaciones.forEach(ubicacion => {
+            dropdownHTML += `
+                <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200" 
+                     onclick="movimientosModule.seleccionarUbicacion(${ubicacion.id}, '${ubicacion.nombre}')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
+                            <div class="text-sm text-gray-500 mt-1">
+                                Selecciona una variante para ver el stock
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        dropdown.innerHTML = dropdownHTML;
+    },
+    
+    seleccionarUbicacion(ubicacionId, ubicacionNombre) {
+        const selectedText = document.getElementById('ubicacion-selected-text');
+        const hiddenInput = document.getElementById('select-ubicacion');
+        
+        if (selectedText && hiddenInput) {
+            selectedText.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt text-white text-xs"></i>
+                    </div>
+                    <span class="font-medium text-gray-900">${ubicacionNombre}</span>
+                </div>
+            `;
+            selectedText.className = 'text-gray-900 flex-1';
+            hiddenInput.value = ubicacionId;
+        }
+        
+        this.hideUbicacionDropdown();
     },
     
 
