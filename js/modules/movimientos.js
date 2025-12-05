@@ -294,19 +294,9 @@ window.movimientosModule = {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Ubicación *</label>
-                                <div class="relative">
-                                    <div id="ubicacion-selector" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white cursor-pointer flex items-center justify-between hover:border-blue-400 transition-colors min-h-[42px]">
-                                        <span id="ubicacion-selected-text" class="text-gray-500 flex-1">Seleccionar ubicación...</span>
-                                        <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="ubicacion-chevron"></i>
-                                    </div>
-                                    <div id="ubicacion-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto hidden">
-                                        <div class="p-3 text-sm text-blue-700 border-b bg-blue-50 flex items-center">
-                                            <i class="fas fa-info-circle mr-2"></i>
-                                            Selecciona una variante para ver el stock disponible
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="select-ubicacion" name="ubicacion">
-                                </div>
+                                <select id="select-ubicacion" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white">
+                                    <option value="">Seleccionar ubicación...</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad *</label>
@@ -418,8 +408,17 @@ window.movimientosModule = {
         // Inicializar búsqueda de productos (no necesita llenar opciones inicialmente)
         this.setupProductSearch();
 
-        // Ubicaciones para filtros (solo el select de filtro, no el del formulario)
+        // Ubicaciones
+        const selectUbicacion = document.getElementById('select-ubicacion');
         const filterUbicacion = document.getElementById('filter-ubicacion');
+        
+        if (selectUbicacion) {
+            selectUbicacion.innerHTML = '<option value="">Seleccionar ubicación...</option>';
+            this.ubicaciones.forEach(ubicacion => {
+                const option = `<option value="${ubicacion.id}">${ubicacion.nombre}</option>`;
+                selectUbicacion.innerHTML += option;
+            });
+        }
         
         if (filterUbicacion) {
             filterUbicacion.innerHTML = '<option value="">Todas las ubicaciones</option>';
@@ -737,25 +736,7 @@ window.movimientosModule = {
             };
         }
             
-        // Evento para el selector de ubicaciones personalizado
-        const ubicacionSelector = document.getElementById('ubicacion-selector');
-        if (ubicacionSelector) {
-            ubicacionSelector.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const dropdown = document.getElementById('ubicacion-dropdown');
-                const varianteId = document.getElementById('select-variante')?.value;
-                
-                if (dropdown && dropdown.classList.contains('hidden')) {
-                    // Si no hay variante seleccionada, mostrar ubicaciones básicas
-                    if (!varianteId) {
-                        this.mostrarUbicacionesBasicas();
-                    }
-                    this.showUbicacionDropdown();
-                } else {
-                    this.hideUbicacionDropdown();
-                }
-            });
-        }
+
 
         // Cerrar dropdowns al hacer clic fuera
         document.addEventListener('click', (e) => {
@@ -765,9 +746,7 @@ window.movimientosModule = {
             if (!e.target.closest('#input-variante-search') && !e.target.closest('#variante-dropdown')) {
                 this.hideVarianteDropdown();
             }
-            if (!e.target.closest('#ubicacion-selector') && !e.target.closest('#ubicacion-dropdown')) {
-                this.hideUbicacionDropdown();
-            }
+
             
             // Cerrar modal de detalles al hacer clic fuera
             const modal = document.getElementById('modal-detalle-movimiento');
@@ -1023,26 +1002,16 @@ window.movimientosModule = {
     },
 
     async updateUbicacionesWithStock(varianteId) {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        const selectedText = document.getElementById('ubicacion-selected-text');
-        const hiddenInput = document.getElementById('select-ubicacion');
-        
+        const selectUbicacion = document.getElementById('select-ubicacion');
+        if (!selectUbicacion) return;
+
         if (!varianteId) {
-            // Si no hay variante seleccionada, mostrar mensaje informativo
-            if (dropdown) {
-                dropdown.innerHTML = `
-                    <div class="p-4 text-center bg-blue-50 border-b">
-                        <i class="fas fa-info-circle text-blue-500 text-lg mb-2"></i>
-                        <p class="text-sm text-blue-700 font-medium">Selecciona una variante</p>
-                        <p class="text-xs text-blue-600">para ver el stock disponible por ubicación</p>
-                    </div>
-                `;
-            }
-            if (selectedText) {
-                selectedText.textContent = 'Seleccionar ubicación...';
-                selectedText.className = 'text-gray-500';
-            }
-            if (hiddenInput) hiddenInput.value = '';
+            // Si no hay variante, mostrar ubicaciones sin información de stock
+            selectUbicacion.innerHTML = '<option value="">Seleccionar ubicación...</option>';
+            this.ubicaciones.forEach(ubicacion => {
+                const option = `<option value="${ubicacion.id}">${ubicacion.nombre}</option>`;
+                selectUbicacion.innerHTML += option;
+            });
             return;
         }
 
@@ -1050,8 +1019,6 @@ window.movimientosModule = {
             // Obtener stock por ubicación para la variante seleccionada
             const response = await fetch(`http://localhost:3001/api/stockinventario?variante_id=${varianteId}`);
             const data = await response.json();
-
-            if (!dropdown) return;
 
             // Crear mapa de stock por ubicación
             const stockPorUbicacion = {};
@@ -1065,51 +1032,23 @@ window.movimientosModule = {
                 });
             }
 
-            // Poblar dropdown con ubicaciones y stock simplificado
-            let dropdownHTML = `
-                <div class="p-3 bg-blue-50 border-b">
-                    <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center">
-                        <i class="fas fa-warehouse mr-2"></i>Stock por Ubicación
-                    </p>
-                </div>
-            `;
-            
+            // Poblar selector con información de stock
+            selectUbicacion.innerHTML = '<option value="">Seleccionar ubicación...</option>';
             this.ubicaciones.forEach(ubicacion => {
                 const stock = stockPorUbicacion[ubicacion.id] || 0;
-                let hoverClass = stock > 0 ? 'hover:bg-blue-50' : 'hover:bg-red-50';
-                
-                dropdownHTML += `
-                    <div class="px-4 py-3 ${hoverClass} cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200" 
-                         onclick="movimientosModule.selectUbicacion(${ubicacion.id}, '${ubicacion.nombre}', ${stock})">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-white text-sm"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
-                                <div class="text-sm ${stock > 0 ? 'text-green-600' : 'text-red-500'} mt-1">
-                                    ${stock > 0 ? `${stock} unidades disponibles` : 'Sin stock disponible'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                const stockText = stock > 0 ? ` (${stock} disponibles)` : ' (Sin stock)';
+                const option = `<option value="${ubicacion.id}">${ubicacion.nombre}${stockText}</option>`;
+                selectUbicacion.innerHTML += option;
             });
-            
-            dropdown.innerHTML = dropdownHTML;
 
         } catch (error) {
             console.error('Error al cargar stock por ubicación:', error);
             // En caso de error, mostrar ubicaciones sin información de stock
-            if (dropdown) {
-                dropdown.innerHTML = `
-                    <div class="p-4 text-center bg-red-50 border-b">
-                        <i class="fas fa-exclamation-triangle text-red-500 text-lg mb-2"></i>
-                        <p class="text-sm text-red-700 font-medium">Error al cargar el stock</p>
-                        <p class="text-xs text-red-600">Inténtalo de nuevo más tarde</p>
-                    </div>
-                `;
-            }
+            selectUbicacion.innerHTML = '<option value="">Error cargando ubicaciones</option>';
+            this.ubicaciones.forEach(ubicacion => {
+                const option = `<option value="${ubicacion.id}">${ubicacion.nombre}</option>`;
+                selectUbicacion.innerHTML += option;
+            });
         }
     },
 
@@ -1148,102 +1087,11 @@ window.movimientosModule = {
             chevron.classList.remove('rotate-180');
         }
     },
-    
-    hideUbicacionDropdown() {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        if (dropdown) {
-            dropdown.classList.add('hidden');
-        }
-    },
-    
-    showUbicacionDropdown() {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        if (dropdown) {
-            dropdown.classList.remove('hidden');
-        }
-    },
-
     hideVarianteDropdown() {
         const dropdown = document.getElementById('variante-dropdown');
         if (dropdown) {
             dropdown.classList.add('hidden');
         }
-    },
-    
-    showUbicacionDropdown() {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        const chevron = document.getElementById('ubicacion-chevron');
-        if (dropdown) {
-            dropdown.classList.remove('hidden');
-        }
-        if (chevron) {
-            chevron.classList.add('rotate-180');
-        }
-    },
-    
-    hideUbicacionDropdown() {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        const chevron = document.getElementById('ubicacion-chevron');
-        if (dropdown) {
-            dropdown.classList.add('hidden');
-        }
-        if (chevron) {
-            chevron.classList.remove('rotate-180');
-        }
-    },
-    
-    mostrarUbicacionesBasicas() {
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        if (!dropdown || !this.ubicaciones || this.ubicaciones.length === 0) return;
-        
-        let dropdownHTML = `
-            <div class="p-3 bg-blue-50 border-b">
-                <p class="text-xs font-semibold text-blue-700 uppercase tracking-wide flex items-center">
-                    <i class="fas fa-warehouse mr-2"></i>Ubicaciones Disponibles
-                </p>
-            </div>
-        `;
-        
-        this.ubicaciones.forEach(ubicacion => {
-            dropdownHTML += `
-                <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-200" 
-                     onclick="movimientosModule.seleccionarUbicacion(${ubicacion.id}, '${ubicacion.nombre}')">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-map-marker-alt text-white text-sm"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="font-medium text-gray-900">${ubicacion.nombre}</div>
-                            <div class="text-sm text-gray-500 mt-1">
-                                Selecciona una variante para ver el stock
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        dropdown.innerHTML = dropdownHTML;
-    },
-    
-    seleccionarUbicacion(ubicacionId, ubicacionNombre) {
-        const selectedText = document.getElementById('ubicacion-selected-text');
-        const hiddenInput = document.getElementById('select-ubicacion');
-        
-        if (selectedText && hiddenInput) {
-            selectedText.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <i class="fas fa-map-marker-alt text-white text-xs"></i>
-                    </div>
-                    <span class="font-medium text-gray-900">${ubicacionNombre}</span>
-                </div>
-            `;
-            selectedText.className = 'text-gray-900 flex-1';
-            hiddenInput.value = ubicacionId;
-        }
-        
-        this.hideUbicacionDropdown();
     },
     
 
@@ -1550,20 +1398,11 @@ window.movimientosModule = {
         this.hideVarianteDropdown();
         this.variantesDelProducto = [];
         
-        // Resetear selector de ubicaciones al estado normal
-        const selectedText = document.getElementById('ubicacion-selected-text');
-        const ubicacionHiddenInput = document.getElementById('select-ubicacion');
-        const dropdown = document.getElementById('ubicacion-dropdown');
-        
-        if (selectedText) {
-            selectedText.textContent = 'Seleccionar ubicación...';
-            selectedText.className = 'text-gray-500';
+        // Resetear selector de ubicaciones 
+        const ubicacionSelect = document.getElementById('select-ubicacion');
+        if (ubicacionSelect) {
+            ubicacionSelect.value = '';
         }
-        if (ubicacionHiddenInput) ubicacionHiddenInput.value = '';
-        if (dropdown) {
-            dropdown.innerHTML = '<div class="p-2 text-sm text-gray-500 border-b">Selecciona una variante para ver el stock disponible</div>';
-        }
-        this.hideUbicacionDropdown();
     },
 
     filtrarMovimientos() {
