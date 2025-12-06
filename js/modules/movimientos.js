@@ -258,12 +258,21 @@ window.movimientosModule = {
                                 <div class="relative">
                                     <input type="text" 
                                            id="input-producto-search" 
-                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-20" 
                                            placeholder="Buscar o seleccionar producto..."
                                            autocomplete="off">
                                     <input type="hidden" id="selected-producto-id" value="">
-                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                                        <button type="button" 
+                                                id="btn-clear-producto"
+                                                class="text-gray-400 hover:text-red-500 transition-colors p-1 hidden"
+                                                title="Limpiar producto"
+                                                onclick="movimientosModule.clearProductField()">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                        <div class="pointer-events-none">
+                                            <i class="fas fa-search text-gray-400"></i>
+                                        </div>
                                     </div>
                                     <!-- Dropdown de resultados -->
                                     <div id="producto-dropdown" class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
@@ -276,12 +285,21 @@ window.movimientosModule = {
                                 <div class="relative">
                                     <input type="text" 
                                            id="input-variante-search" 
-                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10" 
+                                           class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-20" 
                                            placeholder="Buscar o seleccionar variante..."
                                            autocomplete="off"
                                            disabled>
-                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400 text-sm"></i>
+                                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                                        <button type="button" 
+                                                id="btn-clear-variante"
+                                                class="text-gray-400 hover:text-red-500 transition-colors p-1 hidden"
+                                                title="Limpiar variante"
+                                                onclick="movimientosModule.clearVarianteField()">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                        <div class="pointer-events-none">
+                                            <i class="fas fa-search text-gray-400 text-sm"></i>
+                                        </div>
                                     </div>
                                     <input type="hidden" id="select-variante" name="variante">
                                     <div id="variante-dropdown" class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 hidden max-h-60 overflow-y-auto">
@@ -745,6 +763,9 @@ window.movimientosModule = {
             
 
 
+        // Configurar botones de limpiar campos
+        this.setupClearButtons();
+        
         // Eventos del dropdown de ubicaciones se configuran dinámicamente
         
         // Cerrar dropdowns al hacer clic fuera
@@ -1005,10 +1026,12 @@ window.movimientosModule = {
     selectVariante(varianteId, varianteDescription) {
         const searchInput = document.getElementById('input-variante-search');
         const hiddenInput = document.getElementById('select-variante');
+        const clearBtn = document.getElementById('btn-clear-variante');
         
         if (searchInput && hiddenInput) {
             searchInput.value = varianteDescription;
             hiddenInput.value = varianteId;
+            if (clearBtn) clearBtn.classList.remove('hidden');
             this.hideVarianteDropdown();
             
             // Actualizar selector de ubicaciones con stock disponible
@@ -1182,6 +1205,105 @@ window.movimientosModule = {
             chevron.classList.remove('rotate-180');
         }
     },
+
+    // Método para limpiar campo de variante específicamente
+    clearVarianteField() {
+        const varianteSearchInput = document.getElementById('input-variante-search');
+        const selectVariante = document.getElementById('select-variante');
+        const clearBtn = document.getElementById('btn-clear-variante');
+        
+        if (varianteSearchInput) {
+            varianteSearchInput.value = '';
+        }
+        if (selectVariante) {
+            selectVariante.value = '';
+        }
+        if (clearBtn) {
+            clearBtn.classList.add('hidden');
+        }
+        this.hideVarianteDropdown();
+        
+        // También resetear ubicaciones cuando se limpia variante
+        this.updateUbicacionesWithStock(null);
+    },
+
+    // Método para limpiar campo de producto
+    clearProductField() {
+        const productSearchInput = document.getElementById('input-producto-search');
+        const hiddenInput = document.getElementById('selected-producto-id');
+        const clearBtn = document.getElementById('btn-clear-producto');
+        
+        if (productSearchInput) {
+            productSearchInput.value = '';
+        }
+        if (hiddenInput) {
+            hiddenInput.value = '';
+        }
+        if (clearBtn) {
+            clearBtn.classList.add('hidden');
+        }
+        this.selectedProductId = null;
+        this.hideProductDropdown();
+        
+        // Limpiar variantes y ubicaciones también
+        this.clearVarianteField();
+        this.updateVariantes(null);
+    },
+
+    // Método para limpiar campo de ubicación
+    clearUbicacionField() {
+        const selectedText = document.getElementById('ubicacion-selected-text');
+        const hiddenInput = document.getElementById('select-ubicacion');
+        
+        if (selectedText) {
+            selectedText.textContent = 'Seleccionar ubicación...';
+            selectedText.className = 'text-gray-500 flex-1';
+        }
+        if (hiddenInput) {
+            hiddenInput.value = '';
+        }
+        this.hideUbicacionDropdown();
+    },
+
+    setupClearButtons() {
+        // Configurar botón limpiar producto
+        const productInput = document.getElementById('input-producto-search');
+        const clearProductBtn = document.getElementById('btn-clear-producto');
+        
+        if (productInput && clearProductBtn) {
+            // Mostrar/ocultar botón según contenido
+            const toggleProductClearBtn = () => {
+                if (productInput.value.trim().length > 0) {
+                    clearProductBtn.classList.remove('hidden');
+                } else {
+                    clearProductBtn.classList.add('hidden');
+                }
+            };
+            
+            productInput.addEventListener('input', toggleProductClearBtn);
+            productInput.addEventListener('change', toggleProductClearBtn);
+            toggleProductClearBtn(); // Verificar estado inicial
+        }
+        
+        // Configurar botón limpiar variante
+        const varianteInput = document.getElementById('input-variante-search');
+        const clearVarianteBtn = document.getElementById('btn-clear-variante');
+        
+        if (varianteInput && clearVarianteBtn) {
+            // Mostrar/ocultar botón según contenido
+            const toggleVarianteClearBtn = () => {
+                if (varianteInput.value.trim().length > 0) {
+                    clearVarianteBtn.classList.remove('hidden');
+                } else {
+                    clearVarianteBtn.classList.add('hidden');
+                }
+            };
+            
+            varianteInput.addEventListener('input', toggleVarianteClearBtn);
+            varianteInput.addEventListener('change', toggleVarianteClearBtn);
+            toggleVarianteClearBtn(); // Verificar estado inicial
+        }
+    },
     
     setupUbicacionDropdownEvents() {
         // Configurar eventos del selector de ubicaciones personalizado
@@ -1209,12 +1331,17 @@ window.movimientosModule = {
         // Actualizar el input y el campo oculto
         const searchInput = document.getElementById('input-producto-search');
         const hiddenInput = document.getElementById('selected-producto-id');
+        const clearBtn = document.getElementById('btn-clear-producto');
         
         if (searchInput) searchInput.value = productDescription;
         if (hiddenInput) hiddenInput.value = productId;
+        if (clearBtn) clearBtn.classList.remove('hidden');
         
         this.selectedProductId = productId;
         this.hideProductDropdown();
+        
+        // IMPORTANTE: Limpiar variante antes de actualizar con nuevas opciones
+        this.clearVarianteField();
         
         // Actualizar variantes
         this.updateVariantes(productId);
