@@ -3,7 +3,7 @@ import { Package, AlertTriangle, Search, MapPin, Edit2 } from 'lucide-react';
 import ubicacionesService from '../services/ubicacionesService';
 import inventarioService from '../services/inventarioService';
 
-function Inventario() {
+function StockInventario() {
   const [stock, setStock] = useState([]);
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -186,7 +186,7 @@ function Inventario() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Stock Inventario</h1>
           <p className="text-gray-600">Control de stock y ubicaciones</p>
         </div>
       </div>
@@ -477,4 +477,4 @@ function Inventario() {
   );
 }
 
-export default Inventario;
+export default StockInventario;

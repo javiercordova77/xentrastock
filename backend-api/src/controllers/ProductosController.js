@@ -1,5 +1,5 @@
 /**
- * Controlador para Productos - ColchonesW
+ * Controlador para Productos - XentraStock
  * Gestiona productos con variantes, colores e imágenes
  */
 

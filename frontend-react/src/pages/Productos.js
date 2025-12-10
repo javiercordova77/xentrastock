@@ -19,6 +19,7 @@ function Productos() {
     material: '',
     activo: true
   });
+  const [submitting, setSubmitting] = useState(false);
 
   // Cargar datos desde la API
   useEffect(() => {
@@ -60,6 +61,10 @@ function Productos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (submitting) return;
+    
+    setSubmitting(true);
+    
     try {
       let response;
       
@@ -71,20 +76,27 @@ function Productos() {
         setProductos(prev => prev.map(p => 
           p.id === editingProducto.id ? updatedProducto : p
         ));
+        
+        console.log('Producto actualizado exitosamente');
+        alert('Producto actualizado exitosamente');
       } else {
         // Crear nuevo producto
         response = await productosService.create(formData);
         const newProducto = apiUtils.formatResponse(response).data;
         
         setProductos(prev => [...prev, newProducto]);
+        
+        console.log('Producto creado exitosamente');
+        alert('Producto creado exitosamente');
       }
       
       resetForm();
-      alert(`Producto ${editingProducto ? 'actualizado' : 'creado'} exitosamente`);
       
     } catch (error) {
       console.error('Error guardando producto:', error);
       alert('Error al guardar el producto: ' + apiUtils.handleError(error));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -406,9 +418,10 @@ function Productos() {
                 <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                   <button
                     type="submit"
-                    className="btn-primary sm:ml-3 sm:w-auto w-full"
+                    disabled={submitting}
+                    className={`btn-primary sm:ml-3 sm:w-auto w-full ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {editingProducto ? 'Actualizar' : 'Crear'}
+                    {submitting ? 'Guardando...' : (editingProducto ? 'Actualizar' : 'Crear')}
                   </button>
                   <button
                     type="button"

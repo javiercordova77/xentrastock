@@ -1,0 +1,6 @@
+<!-- Placeholder para productos sin imagen -->
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" fill="#F3F4F6" rx="8"/>
+  <path d="M20 10 L30 18 L25 30 L15 30 L10 18 Z" fill="#D1D5DB"/>
+  <circle cx="20" cy="20" r="3" fill="#9CA3AF"/>
+</svg>

@@ -22,7 +22,7 @@ const navigation = [
   { name: 'Ubicaciones', href: '/ubicaciones', icon: MapPin },
   { name: 'Productos', href: '/productos', icon: Package },
   { name: 'Variantes', href: '/variantes', icon: Layers },
-  { name: 'Inventario', href: '/inventario', icon: Archive },
+  { name: 'Stock Inventario', href: '/inventario', icon: Archive },
   { name: 'Movimientos', href: '/movimientos', icon: Activity },
   { name: 'Transferencias', href: '/transferencias', icon: ArrowLeftRight },
   { name: 'Reportes', href: '/reportes', icon: BarChart3 },

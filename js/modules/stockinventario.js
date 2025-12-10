@@ -1,5 +1,5 @@
-// Módulo Inventario
-window.inventarioModule = {
+// Módulo Stock Inventario
+window.stockInventarioModule = {
     data: {
         items: [],
         filteredItems: [],
@@ -12,7 +12,7 @@ window.inventarioModule = {
         },
         pagination: {
             currentPage: 1,
-            itemsPerPage: 25,
+            itemsPerPage: 20,
             totalItems: 0,
             totalPages: 0
         },
@@ -40,10 +40,10 @@ window.inventarioModule = {
         try {
             // Cargar datos en paralelo
             const [inventory, categories, locations, providers] = await Promise.all([
-                window.app.apiRequest('/api/inventario'),
-                window.app.apiRequest('/api/categorias'),
-                window.app.apiRequest('/api/ubicaciones'),
-                window.app.apiRequest('/api/proveedores')
+                fetch('http://localhost:3001/api/stockinventario').then(r => r.json()),
+                fetch('http://localhost:3001/api/categorias').then(r => r.json()),
+                fetch('http://localhost:3001/api/ubicaciones').then(r => r.json()),
+                fetch('http://localhost:3001/api/proveedores').then(r => r.json())
             ]);
 
             this.data.items = inventory?.data || [];
@@ -164,32 +164,36 @@ window.inventarioModule = {
         if (this.data.filters.search) {
             const search = this.data.filters.search.toLowerCase();
             filtered = filtered.filter(item => 
-                (item.nombre || '').toLowerCase().includes(search) ||
-                (item.codigo || '').toLowerCase().includes(search) ||
-                (item.variante || '').toLowerCase().includes(search) ||
-                (item.categoria || '').toLowerCase().includes(search) ||
-                (item.proveedor || '').toLowerCase().includes(search)
+                (item.producto_descripcion || '').toLowerCase().includes(search) ||
+                (item.codigo_variante || '').toLowerCase().includes(search) ||
+                (item.medida || '').toLowerCase().includes(search) ||
+                (item.categoria_nombre || '').toLowerCase().includes(search) ||
+                (item.proveedor_nombre || '').toLowerCase().includes(search) ||
+                (item.material || '').toLowerCase().includes(search)
             );
         }
 
         // Category filter
         if (this.data.filters.category) {
-            filtered = filtered.filter(item => item.categoria_id == this.data.filters.category);
+            filtered = filtered.filter(item => item.categoria_nombre === this.data.categories.find(c => c.id == this.data.filters.category)?.nombre);
         }
 
-        // Location filter
+        // Location filter - buscar en todas las ubicaciones del item
         if (this.data.filters.location) {
-            filtered = filtered.filter(item => item.ubicacion_id == this.data.filters.location);
+            const locationName = this.data.locations.find(l => l.id == this.data.filters.location)?.nombre;
+            filtered = filtered.filter(item => 
+                item.ubicaciones && item.ubicaciones.some(u => u.ubicacion_nombre === locationName)
+            );
         }
 
         // Provider filter
         if (this.data.filters.provider) {
-            filtered = filtered.filter(item => item.proveedor_id == this.data.filters.provider);
+            filtered = filtered.filter(item => item.proveedor_nombre === this.data.providers.find(p => p.id == this.data.filters.provider)?.nombre);
         }
 
         // Low stock filter
         if (this.data.filters.lowStock) {
-            filtered = filtered.filter(item => (item.cantidad || 0) < 10);
+            filtered = filtered.filter(item => (item.stock_total || 0) < 10);
         }
 
         this.data.filteredItems = filtered;
@@ -246,13 +250,23 @@ window.inventarioModule = {
                 </tr>
             `;
         } else {
-            tbody.innerHTML = pageItems.map(item => `
+            tbody.innerHTML = pageItems.map(item => {
+                const stockStatus = (item.stock_total || 0) < 10 ? 'text-red-600' : 'text-gray-900';
+                const stockIcon = (item.stock_total || 0) < 10 ? '<i class="fas fa-exclamation-triangle text-red-500 ml-1 text-xs"></i>' : '';
+                const totalValue = (item.stock_total || 0) * (item.precio_venta || 0);
+                
+                // Mostrar las ubicaciones donde tiene stock
+                const ubicacionesTexto = item.ubicaciones && item.ubicaciones.length > 0 
+                    ? item.ubicaciones.map(u => `${u.ubicacion_nombre} (${u.stock_disponible})`).join(', ')
+                    : 'Sin ubicaciones';
+                    
+                return `
                 <tr class="hover:bg-gray-50 border-b border-gray-100">
                     <td class="px-6 py-4">
                         <input type="checkbox" 
                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                               value="${item.id}"
-                               onchange="inventarioModule.toggleItemSelection('${item.id}', this.checked)">
+                               value="${item.variante_id}"
+                               onchange="stockInventarioModule.toggleItemSelection('${item.variante_id}', this.checked)">
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
@@ -260,46 +274,38 @@ window.inventarioModule = {
                                 <i class="fas fa-box text-gray-400"></i>
                             </div>
                             <div>
-                                <p class="font-medium text-gray-900">${item.nombre || 'Sin nombre'}</p>
-                                <p class="text-sm text-gray-500">${item.codigo || 'Sin código'}</p>
+                                <p class="text-sm font-medium text-gray-900">${item.producto_descripcion || 'Sin nombre'}</p>
+                                <div class="text-sm text-gray-500">${item.codigo_variante || 'Sin código'} - ${item.medida || 'Sin medida'}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            ${item.variante || 'Sin variante'}
-                        </span>
+                    <td class="px-6 py-4 text-sm text-gray-900">${item.categoria_nombre || 'Sin categoría'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900" title="${ubicacionesTexto}">
+                        ${item.ubicaciones && item.ubicaciones.length > 0 
+                            ? `${item.ubicaciones.length} ubicación${item.ubicaciones.length > 1 ? 'es' : ''}` 
+                            : 'Sin stock'}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.categoria || 'Sin categoría'}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${item.ubicacion || 'Sin ubicación'}</td>
                     <td class="px-6 py-4">
-                        <span class="text-lg font-semibold ${(item.cantidad || 0) < 10 ? 'text-red-600' : 'text-gray-900'}">
-                            ${window.utils.formatNumber(item.cantidad || 0)}
+                        <span class="text-lg font-semibold ${stockStatus}">
+                            ${item.stock_total || 0} u.
                         </span>
-                        ${(item.cantidad || 0) < 10 ? '<i class="fas fa-exclamation-triangle text-red-500 ml-1 text-xs"></i>' : ''}
+                        ${stockIcon}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${window.utils.formatCurrency(item.precio || 0)}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${window.utils.formatCurrency(item.precio_venta || 0)}</td>
                     <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                        ${window.utils.formatCurrency((item.cantidad || 0) * (item.precio || 0))}
+                        ${window.utils.formatCurrency(totalValue)}
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center space-x-2">
-                            <button onclick="inventarioModule.editItem('${item.id}')" 
-                                    class="text-blue-600 hover:text-blue-700 p-1 rounded">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="inventarioModule.viewMovements('${item.id}')" 
-                                    class="text-green-600 hover:text-green-700 p-1 rounded">
-                                <i class="fas fa-history"></i>
-                            </button>
-                            <button onclick="inventarioModule.adjustStock('${item.id}')" 
-                                    class="text-yellow-600 hover:text-yellow-700 p-1 rounded">
-                                <i class="fas fa-adjust"></i>
+                        <div class="flex items-center justify-center">
+                            <button onclick="stockInventarioModule.viewStockDetail('${item.variante_id}')" 
+                                    class="text-indigo-600 hover:text-indigo-700 p-2 rounded-lg hover:bg-indigo-50" title="Ver stock por ubicación">
+                                <i class="fas fa-eye"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         this.updatePagination();
@@ -308,63 +314,61 @@ window.inventarioModule = {
 
     updatePagination() {
         const paginationContainer = document.getElementById('pagination-container');
-        if (!paginationContainer) return;
-
-        const { currentPage, totalPages } = this.data.pagination;
+        const paginationInfoTop = document.getElementById('pagination-info-top');
+        const pageInfoTop = document.getElementById('page-info-top');
+        const navigationControlsTop = document.getElementById('navigation-controls-top');
         
-        if (totalPages <= 1) {
+        const { currentPage, totalPages, totalItems, itemsPerPage } = this.data.pagination;
+        
+        // Actualizar información en la parte superior
+        if (paginationInfoTop) {
+            if (totalItems === 0) {
+                paginationInfoTop.textContent = 'Mostrando 0 de 0 registros';
+            } else {
+                const startItem = (currentPage - 1) * itemsPerPage + 1;
+                const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                paginationInfoTop.textContent = `Mostrando ${startItem} a ${endItem} de ${totalItems} registros`;
+            }
+        }
+        
+        // Actualizar información de página en la parte superior (siempre visible)
+        if (pageInfoTop) {
+            pageInfoTop.textContent = totalPages > 0 ? `Página ${currentPage} de ${totalPages}` : 'Página 0 de 0';
+        }
+        
+        // Mostrar siempre los controles de navegación (consistente con otros módulos)
+        const paginationNavigationContainer = document.getElementById('pagination-navigation-container');
+        const firstBtnTop = document.getElementById('btn-first-page-top');
+        const prevBtnTop = document.getElementById('btn-prev-page-top');
+        const nextBtnTop = document.getElementById('btn-next-page-top');
+        const lastBtnTop = document.getElementById('btn-last-page-top');
+        
+        if (paginationNavigationContainer) {
+            paginationNavigationContainer.style.display = 'flex';
+            
+            // Siempre mostrar botones pero con estados apropiados
+            if (firstBtnTop) {
+                firstBtnTop.style.display = 'inline-block';
+                firstBtnTop.disabled = currentPage === 1 || totalPages <= 1;
+            }
+            if (prevBtnTop) {
+                prevBtnTop.style.display = 'inline-block';
+                prevBtnTop.disabled = currentPage === 1 || totalPages <= 1;
+            }
+            if (nextBtnTop) {
+                nextBtnTop.style.display = 'inline-block';
+                nextBtnTop.disabled = currentPage === totalPages || totalPages <= 1;
+            }
+            if (lastBtnTop) {
+                lastBtnTop.style.display = 'inline-block';
+                lastBtnTop.disabled = currentPage === totalPages || totalPages <= 1;
+            }
+        }
+        
+        // Limpiar la paginación inferior (ya no es necesaria)
+        if (paginationContainer) {
             paginationContainer.innerHTML = '';
-            return;
         }
-
-        const startPage = Math.max(1, currentPage - 2);
-        const endPage = Math.min(totalPages, currentPage + 2);
-        const pages = [];
-
-        // Previous button
-        pages.push(`
-            <button onclick="inventarioModule.goToPage(${currentPage - 1})"
-                    class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 ${currentPage === 1 ? 'cursor-not-allowed opacity-50' : ''}"
-                    ${currentPage === 1 ? 'disabled' : ''}>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `);
-
-        // Page numbers
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(`
-                <button onclick="inventarioModule.goToPage(${i})"
-                        class="relative inline-flex items-center px-4 py-2 text-sm font-medium border ${
-                            i === currentPage 
-                                ? 'bg-blue-50 border-blue-500 text-blue-600 z-10' 
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }">
-                    ${i}
-                </button>
-            `);
-        }
-
-        // Next button
-        pages.push(`
-            <button onclick="inventarioModule.goToPage(${currentPage + 1})"
-                    class="relative inline-flex items-center px-2 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 ${currentPage === totalPages ? 'cursor-not-allowed opacity-50' : ''}"
-                    ${currentPage === totalPages ? 'disabled' : ''}>
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `);
-
-        paginationContainer.innerHTML = `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm text-gray-700">
-                        Mostrando ${(currentPage - 1) * this.data.pagination.itemsPerPage + 1} a 
-                        ${Math.min(currentPage * this.data.pagination.itemsPerPage, this.data.pagination.totalItems)} de 
-                        ${this.data.pagination.totalItems} resultados
-                    </span>
-                </div>
-                <div class="flex">${pages.join('')}</div>
-            </div>
-        `;
     },
 
     updateSummary() {
@@ -373,19 +377,19 @@ window.inventarioModule = {
         const lowStockCount = document.getElementById('low-stock-summary');
 
         if (totalItems) {
-            totalItems.textContent = window.utils.formatNumber(this.data.filteredItems.length);
+            totalItems.textContent = this.data.filteredItems.length;
         }
 
         if (totalValue) {
             const value = this.data.filteredItems.reduce((sum, item) => 
-                sum + ((item.cantidad || 0) * (item.precio || 0)), 0
+                sum + ((item.stock_total || 0) * (item.precio_venta || 0)), 0
             );
             totalValue.textContent = window.utils.formatCurrency(value);
         }
 
         if (lowStockCount) {
-            const lowStock = this.data.filteredItems.filter(item => (item.cantidad || 0) < 10).length;
-            lowStockCount.textContent = window.utils.formatNumber(lowStock);
+            const lowStock = this.data.filteredItems.filter(item => (item.stock_total || 0) < 10).length;
+            lowStockCount.textContent = lowStock;
         }
     },
 
@@ -408,6 +412,29 @@ window.inventarioModule = {
             this.data.pagination.currentPage = page;
             this.updateTable();
         }
+    },
+
+    changeItemsPerPage(newSize) {
+        this.data.pagination.itemsPerPage = parseInt(newSize);
+        this.data.pagination.currentPage = 1;
+        this.data.pagination.totalPages = Math.ceil(this.data.pagination.totalItems / this.data.pagination.itemsPerPage);
+        this.updateTable();
+    },
+
+    goToPrevPage() {
+        if (this.data.pagination.currentPage > 1) {
+            this.goToPage(this.data.pagination.currentPage - 1);
+        }
+    },
+
+    goToNextPage() {
+        if (this.data.pagination.currentPage < this.data.pagination.totalPages) {
+            this.goToPage(this.data.pagination.currentPage + 1);
+        }
+    },
+
+    goToLastPage() {
+        this.goToPage(this.data.pagination.totalPages);
     },
 
     toggleSelectAll(checked) {
@@ -514,6 +541,104 @@ window.inventarioModule = {
         this.updateBulkActions();
     },
 
+    // Método para ver detalle de stock por ubicación
+    viewStockDetail(varianteId) {
+        // Buscar el item en los datos actuales
+        const item = this.data.filteredItems.find(i => i.variante_id == varianteId) || 
+                     this.data.items.find(i => i.variante_id == varianteId);
+        
+        if (!item) {
+            window.app.showToast('error', 'Error', 'No se encontró la variante');
+            return;
+        }
+        
+        // Llenar información de la variante
+        const variantInfo = document.getElementById('variant-info');
+        if (variantInfo) {
+            variantInfo.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">${item.producto_descripcion}</h4>
+                        <p class="text-sm text-gray-600">Código: ${item.codigo_variante}</p>
+                        <p class="text-sm text-gray-600">Medida: ${item.medida}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-gray-900">Stock Total: ${item.stock_total || 0} u.</p>
+                        <p class="text-sm text-gray-600">Precio: ${window.utils.formatCurrency(item.precio_venta || 0)}</p>
+                        <p class="text-sm font-medium text-gray-900">Valor Total: ${window.utils.formatCurrency((item.stock_total || 0) * (item.precio_venta || 0))}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Llenar tabla de ubicaciones
+        const tbody = document.getElementById('stock-detail-tbody');
+        if (tbody) {
+            if (item.ubicaciones && item.ubicaciones.length > 0) {
+                tbody.innerHTML = item.ubicaciones.map(ubicacion => {
+                    const estadoClass = ubicacion.estado_stock === 'bajo' ? 'text-red-600' : 
+                                       ubicacion.estado_stock === 'agotado' ? 'text-gray-400' : 'text-green-600';
+                    const estadoTexto = ubicacion.estado_stock === 'bajo' ? 'Stock Bajo' : 
+                                       ubicacion.estado_stock === 'agotado' ? 'Agotado' : 'Normal';
+                    const estadoIcon = ubicacion.estado_stock === 'bajo' ? 'fas fa-exclamation-triangle' : 
+                                      ubicacion.estado_stock === 'agotado' ? 'fas fa-times-circle' : 'fas fa-check-circle';
+                    
+                    return `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-900">${ubicacion.ubicacion_nombre}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    ${ubicacion.ubicacion_tipo}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-lg font-semibold ${ubicacion.stock_disponible < ubicacion.stock_minimo ? 'text-red-600' : 'text-gray-900'}">
+                                    ${ubicacion.stock_disponible} u.
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${ubicacion.stock_minimo} u.
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${estadoClass.replace('text-', 'bg-').replace('600', '100')} ${estadoClass}">
+                                    <i class="${estadoIcon} mr-1"></i>
+                                    ${estadoTexto}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2 text-gray-300"></i>
+                            <p>Esta variante no tiene stock en ninguna ubicación</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Mostrar el modal
+        const modal = document.getElementById('stock-detail-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    },
+    
+    closeStockDetailModal() {
+        const modal = document.getElementById('stock-detail-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    },
+
     // Placeholder methods for actions
     editItem(itemId) {
         window.app.showToast('info', 'Función en desarrollo', 'Próximamente disponible');
@@ -608,7 +733,7 @@ window.inventarioModule = {
                         <span class="text-sm font-medium text-blue-900">
                             <span id="selected-count">0</span> elementos seleccionados
                         </span>
-                        <button onclick="inventarioModule.clearSelection()" 
+                        <button onclick="stockInventarioModule.clearSelection()" 
                                 class="text-sm text-blue-600 hover:text-blue-700">
                             Deseleccionar todo
                         </button>
@@ -628,16 +753,43 @@ window.inventarioModule = {
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <!-- Table Controls -->
                 <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                    <!-- Controles izquierdos -->
                     <div class="flex items-center space-x-4">
                         <label class="flex items-center space-x-2 text-sm">
                             <span class="text-gray-700">Mostrar:</span>
                             <select id="items-per-page" class="border border-gray-300 rounded px-2 py-1 text-sm">
-                                <option value="25">25</option>
+                                <option value="20">20</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
                             <span class="text-gray-700">por página</span>
                         </label>
+                        <span class="text-sm text-gray-700" id="pagination-info-top">
+                            Mostrando 0 de 0 registros
+                        </span>
+                    </div>
+                    
+                    <!-- Controles derechos -->
+                    <div class="flex items-center space-x-1" id="pagination-navigation-container">
+                        <button id="btn-first-page-top" onclick="stockInventarioModule.goToPage(1)" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-double-left"></i>
+                        </button>
+                        <button id="btn-prev-page-top" onclick="stockInventarioModule.goToPrevPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-left"></i>
+                        </button>
+                        <span class="text-sm text-gray-700 mx-3" id="page-info-top">
+                            Página 1 de 1
+                        </span>
+                        <button id="btn-next-page-top" onclick="stockInventarioModule.goToNextPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-right"></i>
+                        </button>
+                        <button id="btn-last-page-top" onclick="stockInventarioModule.goToLastPage()" 
+                                class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-angle-double-right"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -650,38 +802,35 @@ window.inventarioModule = {
                                     <input type="checkbox" id="select-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('nombre')">
+                                    onclick="stockInventarioModule.sortBy('nombre')">
                                     <div class="flex items-center space-x-1">
-                                        <span>Producto</span>
+                                        <span>Producto / Variante</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Variante
-                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('categoria')">
+                                    onclick="stockInventarioModule.sortBy('categoria')">
                                     <div class="flex items-center space-x-1">
                                         <span>Categoría</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('ubicacion')">
+                                    onclick="stockInventarioModule.sortBy('ubicacion')">
                                     <div class="flex items-center space-x-1">
                                         <span>Ubicación</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('cantidad')">
+                                    onclick="stockInventarioModule.sortBy('cantidad')">
                                     <div class="flex items-center space-x-1">
                                         <span>Stock</span>
                                         <i class="fas fa-sort text-gray-400"></i>
                                     </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                                    onclick="inventarioModule.sortBy('precio')">
+                                    onclick="stockInventarioModule.sortBy('precio')">
                                     <div class="flex items-center space-x-1">
                                         <span>Precio</span>
                                         <i class="fas fa-sort text-gray-400"></i>
@@ -704,6 +853,48 @@ window.inventarioModule = {
                 <!-- Pagination -->
                 <div class="bg-white px-4 py-3 border-t border-gray-200" id="pagination-container">
                     <!-- Pagination will be populated here -->
+                </div>
+            </div>
+
+            <!-- Modal para ver stock por ubicación -->
+            <div id="stock-detail-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+                <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-900" id="modal-title">Detalle de Stock por Ubicación</h3>
+                        <button onclick="stockInventarioModule.closeStockDetailModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Información de la variante -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4" id="variant-info">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                    
+                    <!-- Tabla de ubicaciones -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Disponible</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Mínimo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-detail-tbody" class="bg-white divide-y divide-gray-200">
+                                <!-- Se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="stockInventarioModule.closeStockDetailModal()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                            Cerrar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;

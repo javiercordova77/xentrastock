@@ -37,6 +37,12 @@ function appData() {
                 badge: null
             },
             {
+                id: 'ubicaciones',
+                name: 'Ubicaciones',
+                icon: 'fas fa-map-marker-alt',
+                badge: null
+            },
+            {
                 id: 'productos',
                 name: 'Productos',
                 icon: 'fas fa-box',
@@ -49,14 +55,8 @@ function appData() {
                 badge: null
             },
             {
-                id: 'ubicaciones',
-                name: 'Ubicaciones',
-                icon: 'fas fa-map-marker-alt',
-                badge: null
-            },
-            {
                 id: 'inventario',
-                name: 'Inventario',
+                name: 'Stock Inventario',
                 icon: 'fas fa-warehouse',
                 badge: null
             },
@@ -216,8 +216,8 @@ function appData() {
                         }
                         break;
                     case 'inventario':
-                        if (window.inventarioModule && window.inventarioModule.load) {
-                            await window.inventarioModule.load();
+                        if (window.stockInventarioModule && window.stockInventarioModule.load) {
+                            await window.stockInventarioModule.load();
                         } else {
                             this.showModuleUnavailable(moduleId);
                         }
@@ -284,8 +284,8 @@ function appData() {
         // Limpiar contenido de todos los módulos
         clearAllModuleContent() {
             const moduleIds = [
-                'dashboard', 'proveedores', 'categorias', 'productos', 
-                'variantes', 'ubicaciones', 'inventario', 'movimientos', 
+                'dashboard', 'proveedores', 'categorias', 'ubicaciones', 
+                'productos', 'variantes', 'inventario', 'movimientos', 
                 'transferencias', 'reportes', 'configuracion'
             ];
             
@@ -297,40 +297,7 @@ function appData() {
             });
         },
 
-        // Títulos y descripciones de módulos
-        get currentModuleTitle() {
-            const moduleData = {
-                dashboard: 'Dashboard',
-                proveedores: 'Gestión de Proveedores',
-                categorias: 'Gestión de Categorías',
-                productos: 'Gestión de Productos',
-                variantes: 'Gestión de Variantes',
-                ubicaciones: 'Gestión de Ubicaciones',
-                inventario: 'Control de Inventario',
-                movimientos: 'Historial de Movimientos',
-                transferencias: 'Gestión de Transferencias',
-                reportes: 'Reportes y Análisis',
-                configuracion: 'Configuración del Sistema'
-            };
-            return moduleData[this.activeModule] || 'XentraStock';
-        },
 
-        get currentModuleDescription() {
-            const moduleDescriptions = {
-                dashboard: 'Vista general del sistema y métricas principales',
-                proveedores: 'Administra la información de tus proveedores',
-                categorias: 'Organiza productos por categorías',
-                productos: 'Gestiona el catálogo de productos',
-                variantes: 'Administra variantes de productos (colores, tallas, etc.)',
-                ubicaciones: 'Gestiona almacenes y ubicaciones de stock',
-                inventario: 'Controla el stock por ubicación y variante',
-                movimientos: 'Registra entradas y salidas de inventario',
-                transferencias: 'Gestiona transferencias entre ubicaciones',
-                reportes: 'Genera reportes y análisis de datos',
-                configuracion: 'Configura parámetros del sistema'
-            };
-            return moduleDescriptions[this.activeModule] || '';
-        },
 
         // Loading state
         showLoading() {

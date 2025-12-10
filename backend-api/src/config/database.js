@@ -1,5 +1,5 @@
 /**
- * Configuración de base de datos SQLite para XentraStock v3.0 - ColchonesW
+ * Configuración de base de datos SQLite para XentraStock v3.0
  */
 
 const sqlite3 = require('sqlite3').verbose();
@@ -41,7 +41,7 @@ class DatabaseConfig {
                 await this.createIndexes();
                 await this.insertSeedData();
             } else {
-                console.log('📄 Ejecutando init.sql para estructura ColchonesW...');
+                console.log('📄 Ejecutando init.sql para estructura XentraStock...');
                 await this.executeInitSQL();
             }
             
@@ -100,7 +100,7 @@ class DatabaseConfig {
             }
         }
         
-        console.log('✅ Estructura ColchonesW creada exitosamente');
+        console.log('✅ Estructura XentraStock creada exitosamente');
         
         // Verificar que las tablas se crearon
         await this.verifyTables();
@@ -264,7 +264,7 @@ class DatabaseConfig {
 
     async createIndexes() {
         const indexes = [
-            // Índices para la estructura ColchonesW
+            // Índices para la estructura XentraStock
             'CREATE INDEX IF NOT EXISTS idx_productos_categoria ON productos(id_categoria)',
             'CREATE INDEX IF NOT EXISTS idx_productos_proveedor ON productos(id_proveedor)', 
             'CREATE INDEX IF NOT EXISTS idx_variantes_producto ON variantes(id_producto)',

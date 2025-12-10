@@ -1,7 +1,7 @@
 /**
  * SOLUCIÓN DEFINITIVA PARA EL INVENTARIO
  * 
- * Crea un endpoint específico que convierte los datos de ColchonesW
+ * Crea un endpoint específico que convierte los datos de XentraStock
  * al formato que espera el frontend, sin afectar otros módulos
  */
 
@@ -10,7 +10,7 @@ const router = express.Router();
 const database = require('../config/database');
 const { asyncHandler } = require('../middleware/errorHandler');
 
-// Endpoint específico para inventario que convierte datos ColchonesW al formato legacy
+// Endpoint específico para inventario que convierte datos XentraStock al formato legacy
 router.get('/inventario-legacy', asyncHandler(async (req, res) => {
     console.log('📊 Generando datos de inventario en formato legacy...');
     
